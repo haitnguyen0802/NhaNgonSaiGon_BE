@@ -180,6 +180,48 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Route for editing a product
+router.get('/:id/edit', async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id, {
+      include: [
+        { model: Collaborator, as: 'collaborator' },
+        { model: ProductImage, as: 'images' }
+      ]
+    });
+    
+    if (!product) {
+      return res.status(404).render('error', {
+        message: 'Không tìm thấy sản phẩm',
+        error: {}
+      });
+    }
+    
+    // Get collaborators for the dropdown
+    const collaborators = await Collaborator.findAll({
+      attributes: ['id', 'name'],
+      order: [['name', 'ASC']]
+    });
+    
+    // Get categories for the dropdown (assuming you have a Category model)
+    const categories = []; // Replace with actual categories query when available
+    
+    res.render('products/edit', {
+      title: `Chỉnh sửa sản phẩm: ${product.title}`,
+      active: 'products',
+      product,
+      collaborators,
+      categories
+    });
+  } catch (err) {
+    console.error('Product edit form error:', err);
+    res.status(500).render('error', {
+      message: 'Không thể tải form chỉnh sửa sản phẩm',
+      error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+  }
+});
+
 // Create new product - No auth check needed since user is already logged in
 router.post('/',
   uploadMiddleware.uploadProductImages,

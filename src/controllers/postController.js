@@ -9,87 +9,65 @@ const path = require('path');
 
 // Lấy tất cả bài đăng với bộ lọc - API
 exports.getAllPosts = catchAsync(async (req, res, next) => {
-  try {
-    const { 
-      status, 
-      category, 
-      product,
-      isPinned,
-      search,
-      sort = '-createdAt',
-      page = 1,
-      limit = 10
-    } = req.query;
-
-    // Tạo đối tượng query
-    const where = {};
-
-    // Lọc theo trạng thái
-    if (status) where.status = status;
-    
-    // Lọc theo danh mục
-    if (category) where.category_id = category;
-    
-    // Lọc theo sản phẩm
-    if (product) where.product_id = product;
-
-    // Tìm kiếm theo tiêu đề
-    if (search) {
-      where.title = { [Op.like]: `%${search}%` };
-    }
-    
-    // Lọc bài bị xóa
-    where.is_deleted = false;
-    
-    // Xử lý sắp xếp
-    let order = [];
-    if (sort) {
-      const sortField = sort.startsWith('-') ? sort.substring(1) : sort;
-      const sortDirection = sort.startsWith('-') ? 'DESC' : 'ASC';
-      
-      // Mapping from frontend field names to database field names
-      const fieldMap = {
-        'createdAt': 'created_at',
-        'updatedAt': 'updated_at',
-        'pinDate': 'pin_date'
-      };
-      
-      const dbField = fieldMap[sortField] || sortField;
-      order.push([dbField, sortDirection]);
-    }
-
-    // Tính số lượng bỏ qua
-    const offset = (Number(page) - 1) * Number(limit);
-
-    // Thực hiện truy vấn
-    const { count, rows: posts } = await Post.findAndCountAll({
-      where,
-      include: [
-        { model: Category, as: 'category', attributes: ['name', 'slug'] },
-        { 
-          model: Product, 
-          as: 'product',
-          attributes: ['title', 'location', 'price', 'status']
-        },
-        { model: User, as: 'author', attributes: ['id', 'name', 'email'] }
-      ],
-      order,
-      offset,
-      limit: Number(limit)
-    });
-
-    // Phản hồi
-    res.status(200).json({
-      success: true,
-      count: posts.length,
-      totalPages: Math.ceil(count / Number(limit)),
-      currentPage: Number(page),
-      total: count,
-      data: posts
-    });
-  } catch (error) {
-    next(error);
+  // Get query parameters
+  const { page = 1, limit = 10, sort, status, category, product, search } = req.query;
+  
+  // Base where clause to exclude deleted posts
+  const where = {
+    deleted_at: null
+  };
+  
+  // Add filters if provided
+  if (status) where.status = status;
+  if (category) where.category_id = category;
+  if (product) where.product_id = product;
+  if (search) {
+    where.title = { [Op.like]: `%${search}%` };
   }
+  
+  // Determine the sort order
+  let order = [['created_at', 'DESC']]; // Default sort
+  if (sort) {
+    const [field, direction] = sort.split(':');
+    // Map frontend field names to database field names if needed
+    const sortMapping = {
+      date: 'created_at',
+      title: 'title',
+      // Add more mappings as needed
+    };
+    const dbField = sortMapping[field] || field;
+    order = [[dbField, direction.toUpperCase()]];
+  }
+
+  // Calculate offset for pagination
+  const offset = (page - 1) * limit;
+  
+  // Query posts with their related category, product, and author
+  const { count, rows: posts } = await Post.findAndCountAll({
+    where,
+    include: [
+      { model: Category, as: 'category' },
+      { model: Product, as: 'product' },
+      { model: User, as: 'author', attributes: ['id', 'name', 'email', 'avatar'] }
+    ],
+    order,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+    distinct: true
+  });
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(count / limit);
+  
+  // Return response
+  res.status(200).json({
+    success: true,
+    count: posts.length,
+    totalPages,
+    currentPage: parseInt(page),
+    totalCount: count,
+    data: posts
+  });
 });
 
 // Lấy thông tin một bài đăng - API
@@ -272,14 +250,46 @@ exports.createPost = catchAsync(async (req, res, next) => {
     if (req.body.is_pinned) {
       req.body.pin_date = new Date();
     }
-
+    
+    // Handle empty category_id - if it's an empty string, set it to null
+    if (req.body.category_id === '' || req.body.category_id === undefined) {
+      req.body.category_id = null;
+    } else {
+      // Verify the category exists
+      const categoryExists = await Category.findByPk(req.body.category_id);
+      if (!categoryExists) {
+        req.body.category_id = null; // Set to null if category doesn't exist
+      }
+    }
+    
+    // Create post with validated data
     const post = await Post.create(req.body);
 
     // Redirect to posts list with success message
     req.flash('success', 'Bài viết đã được tạo thành công');
     res.redirect('/posts');
   } catch (error) {
-    next(error);
+    console.error('Error creating post:', error);
+    
+    // Get categories and products for form re-rendering
+    const categories = await Category.findAll({
+      order: [['name', 'ASC']]
+    });
+    
+    const products = await Product.findAll({
+      where: { status: 'available' },
+      order: [['title', 'ASC']]
+    });
+    
+    // Re-render the form with error message and previously entered data
+    res.render('posts/form', {
+      title: 'Thêm bài viết mới',
+      active: 'posts',
+      post: req.body,
+      categories,
+      products,
+      error: error.message || 'Có lỗi xảy ra khi tạo bài viết'
+    });
   }
 });
 
@@ -321,6 +331,17 @@ exports.updatePost = catchAsync(async (req, res, next) => {
       }
       req.body.representative_image = req.file.filename;
     }
+    
+    // Handle empty category_id - if it's an empty string, set it to null
+    if (req.body.category_id === '' || req.body.category_id === undefined) {
+      req.body.category_id = null;
+    } else {
+      // Verify the category exists
+      const categoryExists = await Category.findByPk(req.body.category_id);
+      if (!categoryExists) {
+        req.body.category_id = null; // Set to null if category doesn't exist
+      }
+    }
 
     await post.update(req.body);
 
@@ -328,7 +349,26 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     req.flash('success', 'Bài viết đã được cập nhật thành công');
     res.redirect('/posts');
   } catch (error) {
-    next(error);
+    console.error('Error updating post:', error);
+    
+    // Get categories and products for form re-rendering
+    const categories = await Category.findAll({
+      order: [['name', 'ASC']]
+    });
+    
+    const products = await Product.findAll({
+      order: [['title', 'ASC']]
+    });
+    
+    // Re-render the form with error message
+    res.render('posts/form', {
+      title: 'Chỉnh sửa bài viết',
+      active: 'posts',
+      post: { ...req.body, id: req.params.id },
+      categories,
+      products,
+      error: error.message || 'Có lỗi xảy ra khi cập nhật bài viết'
+    });
   }
 });
 

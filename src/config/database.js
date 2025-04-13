@@ -33,8 +33,9 @@ const connectDB = async () => {
     console.log('Kết nối với cơ sở dữ liệu MySQL thành công');
     
     // Đồng bộ hóa các model với database (không xóa dữ liệu hiện có)
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('Đồng bộ hóa model thành công');
+    // Chỉ kiểm tra kết nối, không tự động thay đổi cấu trúc bảng để tránh lỗi
+    await sequelize.sync({ alter: false });
+    console.log('Kết nối model thành công');
   } catch (error) {
     console.error('Không thể kết nối với cơ sở dữ liệu:', error);
     process.exit(1);

@@ -8,8 +8,24 @@
 
   <div class="card shadow-sm">
     <div class="card-body">
+      <!-- Error message display -->
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fa-solid fa-circle-exclamation me-2"></i><%= error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+      
+      <!-- Success message display -->
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fa-solid fa-check-circle me-2"></i><%= success %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+      
       <form 
-        action="<%= post ? '/posts/' + post.id + '?_method=PUT' : '/posts' %>" 
+        action="<%= post ? '/posts/' + post.id + '?_method=PUT' : '/posts/new' %>" 
         method="POST" 
         enctype="multipart/form-data"
         id="postForm"
