@@ -30,9 +30,26 @@
               >
             </div>
 
-            <!-- Content Field with Editor -->
+            <!-- Content Field with Basic Editor -->
             <div class="mb-4">
               <label for="content" class="form-label">Nội dung <span class="text-danger">*</span></label>
+              <!-- Simple formatting toolbar -->
+              <div class="btn-toolbar mb-2" role="toolbar" aria-label="Formatting toolbar">
+                <div class="btn-group me-2" role="group" aria-label="Text formatting">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
+                </div>
+                <div class="btn-group me-2" role="group" aria-label="List formatting">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('bulletList')"><i class="fas fa-list-ul"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('numberList')"><i class="fas fa-list-ol"></i></button>
+                </div>
+                <div class="btn-group" role="group" aria-label="Alignment">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignLeft')"><i class="fas fa-align-left"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignCenter')"><i class="fas fa-align-center"></i></button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignRight')"><i class="fas fa-align-right"></i></button>
+                </div>
+              </div>
               <textarea 
                 class="form-control" 
                 id="content" 
@@ -40,7 +57,7 @@
                 rows="12"
                 required
               ><%= post ? post.content : '' %></textarea>
-              <small class="text-muted">Sử dụng công cụ định dạng để tạo bài viết hấp dẫn hơn</small>
+              <small class="text-muted">Sử dụng thanh công cụ phía trên để định dạng văn bản.</small>
             </div>
 
             <!-- Product Association -->
@@ -204,40 +221,58 @@
   </div>
 </div>
 
-<!-- TinyMCE Editor Integration -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- Custom JavaScript for form functionality -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize TinyMCE
-    tinymce.init({
-      selector: '#content',
-      height: 500,
-      plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
-      menubar: 'file edit view insert format tools table help',
-      toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
-      toolbar_sticky: true,
-      autosave_ask_before_unload: true,
-      autosave_interval: '30s',
-      image_advtab: true,
-      link_list: [
-        { title: 'Trang chủ', value: '/' },
-        { title: 'Sản phẩm', value: '/products' }
-      ],
-      importcss_append: true,
-      file_picker_callback: function (callback, value, meta) {
-        /* Code for file picker - would be implemented here */
-      },
-      templates: [
-        { title: 'Mô tả sản phẩm', description: 'Mẫu mô tả sản phẩm cơ bản', content: '<h2>Thông tin sản phẩm</h2><p>Mô tả chi tiết tại đây.</p><h3>Đặc điểm nổi bật</h3><ul><li>Đặc điểm 1</li><li>Đặc điểm 2</li><li>Đặc điểm 3</li></ul>' }
-      ],
-      setup: function (editor) {
-        editor.on('change', function () {
-          editor.save();
-        });
+    // Basic text formatting function
+    window.formatText = function(command) {
+      const textarea = document.getElementById('content');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      let formattedText = '';
+      
+      switch(command) {
+        case 'bold':
+          formattedText = `**${selectedText}**`;
+          break;
+        case 'italic':
+          formattedText = `*${selectedText}*`;
+          break;
+        case 'underline':
+          formattedText = `_${selectedText}_`;
+          break;
+        case 'bulletList':
+          // Split text into lines and add bullet points
+          formattedText = selectedText.split('\n').map(line => `• ${line}`).join('\n');
+          break;
+        case 'numberList':
+          // Split text into lines and add numbers
+          formattedText = selectedText.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
+          break;
+        case 'alignLeft':
+          formattedText = selectedText; // Default alignment
+          break;
+        case 'alignCenter':
+          formattedText = selectedText.split('\n').map(line => `    ${line}    `).join('\n');
+          break;
+        case 'alignRight':
+          formattedText = selectedText.split('\n').map(line => `        ${line}`).join('\n');
+          break;
       }
-    });
+      
+      // Replace the selected text with the formatted text
+      textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      
+      // Set the selection to the end of the newly inserted text
+      textarea.selectionStart = start + formattedText.length;
+      textarea.selectionEnd = start + formattedText.length;
+      
+      // Focus back on the textarea
+      textarea.focus();
+    };
 
-    // Image preview
+    // Image preview functionality
     document.getElementById('image').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) {

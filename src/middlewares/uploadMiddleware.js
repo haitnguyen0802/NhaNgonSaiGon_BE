@@ -48,11 +48,8 @@ exports.uploadSingleImage = upload.single('image');
 // Middleware for post images - single image
 exports.uploadPostImage = upload.single('image');
 
-// Middleware để xử lý hình ảnh chính và các hình ảnh phụ
-exports.uploadProductImages = upload.fields([
-  { name: 'mainImage', maxCount: 1 },
-  { name: 'images', maxCount: 5 }
-]);
+// Middleware để xử lý hình ảnh sản phẩm - multiple images
+exports.uploadProductImages = upload.array('images', 10); // Allow up to 10 images
 
 // Middleware để xử lý hình ảnh bài viết
 exports.uploadPostImages = upload.fields([

@@ -3,300 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm bài viết mới | Nhà Ngôn Sài Gòn</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Đăng tin mới | Nhà Ngôn Sài Gòn</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
-    <!-- Summernote for rich text editor -->
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .preview-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .main-image-indicator {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: rgba(0,123,255,0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(220,53,69,0.8);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .image-preview-item {
+            position: relative;
+        }
+        .required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3">
-                    <div class="sidebar-header mb-4 p-3">
-                        <h5>Nhà Ngôn Sài Gòn</h5>
+    <div class="wrapper">
+        <!-- Page Content -->
+        <div id="content" class="w-100">
+            <!-- Main Content -->
+            <div class="container-fluid">
+                <% if (typeof flashMessage !== 'undefined' && flashMessage.message) { %>
+                    <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
+                        <%= flashMessage.message %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dashboard">
-                                <i class="fas fa-tachometer-alt me-2"></i>
-                                Tổng quan
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/products">
-                                <i class="fas fa-box me-2"></i>
-                                Quản lý sản phẩm
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/posts">
-                                <i class="fas fa-newspaper me-2"></i>
-                                Quản lý bài viết
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/categories">
-                                <i class="fas fa-tags me-2"></i>
-                                Quản lý danh mục
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/collaborators">
-                                <i class="fas fa-users me-2"></i>
-                                Quản lý cộng tác viên
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Thêm bài viết mới</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <a href="/posts" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-arrow-left"></i> Quay lại
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <% if (locals.errors && errors.length > 0) { %>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <ul class="mb-0">
-                        <% errors.forEach(error => { %>
-                        <li><%= error %></li>
-                        <% }); %>
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
                 <% } %>
+                
+                <!-- Page Navigation -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/dashboard">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="/posts">Quản lý tin đăng</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Đăng tin mới</li>
+                    </ol>
+                </nav>
 
-                <% if (locals.success) { %>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <%= success %>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <!-- Page Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">Đăng tin mới</h1>
+                    <a href="/posts" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
                 </div>
-                <% } %>
-
-                <form action="/posts/new" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-                    <div class="row g-3">
-                        <!-- Left column -->
-                        <div class="col-md-8">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="title" class="form-label">Tiêu đề bài viết <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="title" name="title" required>
-                                        <div class="invalid-feedback">
-                                            Vui lòng nhập tiêu đề bài viết
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="slug" class="form-label">Đường dẫn (Slug)</label>
-                                        <input type="text" class="form-control" id="slug" name="slug">
-                                        <small class="text-muted">Để trống để tự động tạo từ tiêu đề</small>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="short_description" class="form-label">Mô tả ngắn <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="short_description" name="short_description" rows="3" required></textarea>
-                                        <div class="invalid-feedback">
-                                            Vui lòng nhập mô tả ngắn
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="content" class="form-label">Nội dung bài viết <span class="text-danger">*</span></label>
-                                        <textarea id="content" name="content" class="form-control" required></textarea>
-                                        <div class="invalid-feedback">
-                                            Vui lòng nhập nội dung bài viết
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    SEO Meta
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="meta_title" class="form-label">Meta Title</label>
-                                        <input type="text" class="form-control" id="meta_title" name="meta_title">
-                                        <small class="text-muted">Để trống để sử dụng tiêu đề bài viết</small>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="meta_description" class="form-label">Meta Description</label>
-                                        <textarea class="form-control" id="meta_description" name="meta_description" rows="2"></textarea>
-                                        <small class="text-muted">Để trống để sử dụng mô tả ngắn</small>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="meta_keywords" class="form-label">Meta Keywords</label>
-                                        <input type="text" class="form-control" id="meta_keywords" name="meta_keywords">
-                                        <small class="text-muted">Phân cách các từ khóa bằng dấu phẩy</small>
-                                    </div>
-                                </div>
+                
+                <!-- Post Form -->
+                <form action="/posts/new" method="POST" enctype="multipart/form-data" id="postForm" class="needs-validation" novalidate>
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section mb-4">
+                        <h2 class="form-section-title">Thông tin cơ bản</h2>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="title" class="form-label required">Tiêu đề</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                                <div class="invalid-feedback">Vui lòng nhập tiêu đề</div>
                             </div>
                         </div>
-
-                        <!-- Right column -->
-                        <div class="col-md-4">
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    Đăng bài
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label for="content" class="form-label required">Mô tả chi tiết</label>
+                                <!-- Simple formatting toolbar -->
+                                <div class="btn-toolbar mb-2" role="toolbar" aria-label="Formatting toolbar">
+                                    <div class="btn-group me-2" role="group" aria-label="Text formatting">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
+                                    </div>
+                                    <div class="btn-group me-2" role="group" aria-label="List formatting">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('bulletList')"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('numberList')"><i class="fas fa-list-ol"></i></button>
+                                    </div>
+                                    <div class="btn-group" role="group" aria-label="Alignment">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignLeft')"><i class="fas fa-align-left"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignCenter')"><i class="fas fa-align-center"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignRight')"><i class="fas fa-align-right"></i></button>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="status" class="form-label">Trạng thái</label>
-                                        <select class="form-select" id="status" name="status">
-                                            <option value="draft">Bản nháp</option>
-                                            <option value="published">Đã xuất bản</option>
-                                            <option value="archived">Đã lưu trữ</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="published_at" class="form-label">Ngày xuất bản</label>
-                                        <input type="datetime-local" class="form-control" id="published_at" name="published_at">
-                                    </div>
-
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="is_pinned" name="is_pinned">
-                                        <label class="form-check-label" for="is_pinned">
-                                            Ghim bài viết
+                                <textarea id="content" name="content" class="form-control" rows="10" required></textarea>
+                                <div class="invalid-feedback">Vui lòng nhập mô tả chi tiết</div>
+                                <div class="form-text">Sử dụng thanh công cụ phía trên để định dạng văn bản.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information Section -->
+                    <div class="form-section mb-4">
+                        <h2 class="form-section-title">Thông tin liên hệ</h2>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="contact_name" class="form-label required">Tên liên hệ</label>
+                                <input type="text" class="form-control" id="contact_name" name="contact_name" required>
+                                <div class="invalid-feedback">Vui lòng nhập tên liên hệ</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contact_phone" class="form-label required">Điện thoại</label>
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" required pattern="[0-9]{10,11}">
+                                <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="collaborator_id" class="form-label">Nguồn (CTV)</label>
+                                <select class="form-select" id="collaborator_id" name="collaborator_id">
+                                    <option value="">-- Chọn cộng tác viên --</option>
+                                    <% if (locals.collaborators && collaborators.length > 0) { %>
+                                        <% collaborators.forEach(collaborator => { %>
+                                            <option value="<%= collaborator.id %>"><%= collaborator.name %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location Information Section -->
+                    <div class="form-section mb-4">
+                        <h2 class="form-section-title">Vị trí bất động sản</h2>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="district" class="form-label required">Quận/Huyện</label>
+                                <select class="form-select" id="district" name="district" required>
+                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                    <option value="Quận 1">Quận 1</option>
+                                    <option value="Quận 2">Quận 2</option>
+                                    <option value="Quận 3">Quận 3</option>
+                                    <option value="Quận 4">Quận 4</option>
+                                    <option value="Quận 5">Quận 5</option>
+                                    <option value="Quận 6">Quận 6</option>
+                                    <option value="Quận 7">Quận 7</option>
+                                    <option value="Quận 8">Quận 8</option>
+                                    <option value="Quận 9">Quận 9</option>
+                                    <option value="Quận 10">Quận 10</option>
+                                    <option value="Quận 11">Quận 11</option>
+                                    <option value="Quận 12">Quận 12</option>
+                                    <option value="Quận Bình Thạnh">Quận Bình Thạnh</option>
+                                    <option value="Quận Tân Bình">Quận Tân Bình</option>
+                                    <option value="Quận Tân Phú">Quận Tân Phú</option>
+                                    <option value="Quận Phú Nhuận">Quận Phú Nhuận</option>
+                                    <option value="Quận Gò Vấp">Quận Gò Vấp</option>
+                                    <option value="Quận Thủ Đức">TP Thủ Đức</option>
+                                    <option value="Huyện Bình Chánh">Huyện Bình Chánh</option>
+                                    <option value="Huyện Củ Chi">Huyện Củ Chi</option>
+                                    <option value="Huyện Hóc Môn">Huyện Hóc Môn</option>
+                                    <option value="Huyện Nhà Bè">Huyện Nhà Bè</option>
+                                    <option value="Huyện Cần Giờ">Huyện Cần Giờ</option>
+                                </select>
+                                <div class="invalid-feedback">Vui lòng chọn quận/huyện</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ward" class="form-label required">Phường/Xã</label>
+                                <input type="text" class="form-control" id="ward" name="ward" required>
+                                <div class="invalid-feedback">Vui lòng nhập phường/xã</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="address" class="form-label required">Địa chỉ chi tiết</label>
+                                <input type="text" class="form-control" id="address" name="address" required>
+                                <div class="invalid-feedback">Vui lòng nhập địa chỉ chi tiết</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="street_width" class="form-label">Đường trước nhà (m)</label>
+                                <input type="number" step="0.1" min="0" class="form-control" id="street_width" name="street_width">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="direction" class="form-label">Hướng nhà</label>
+                                <select class="form-select" id="direction" name="direction">
+                                    <option value="">-- Chọn hướng --</option>
+                                    <option value="Đông">Đông</option>
+                                    <option value="Tây">Tây</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Bắc">Bắc</option>
+                                    <option value="Đông-Bắc">Đông-Bắc</option>
+                                    <option value="Đông-Nam">Đông-Nam</option>
+                                    <option value="Tây-Bắc">Tây-Bắc</option>
+                                    <option value="Tây-Nam">Tây-Nam</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Property Details Section -->
+                    <div class="form-section mb-4">
+                        <h2 class="form-section-title">Thông tin bất động sản</h2>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="price" class="form-label required">Giá (VNĐ)</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" step="1000000" class="form-control" id="price" name="price" required>
+                                    <span class="input-group-text">₫</span>
+                                </div>
+                                <div class="invalid-feedback">Vui lòng nhập giá</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_discounted" name="is_discounted" value="true">
+                                        <label class="form-check-label" for="is_discounted">
+                                            Giảm giá
                                         </label>
                                     </div>
-
-                                    <div class="d-grid gap-2">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save"></i> Lưu bài viết
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
-
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    Danh mục
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="category" class="form-label">Danh mục <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="category" name="category" required>
-                                            <option value="">Chọn danh mục</option>
-                                            <% if (locals.categories && categories.length > 0) { %>
-                                                <% categories.forEach(category => { %>
-                                                    <option value="<%= category.id %>"><%= category.name %></option>
-                                                <% }); %>
-                                            <% } %>
-                                        </select>
-                                        <div class="invalid-feedback">
-                                            Vui lòng chọn danh mục
-                                        </div>
-                                    </div>
-                                </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="area" class="form-label required">Diện tích (m²)</label>
+                                <input type="number" min="0" step="0.1" class="form-control" id="area" name="area" required>
+                                <div class="invalid-feedback">Vui lòng nhập diện tích</div>
                             </div>
-
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    Hình ảnh đại diện
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="representative_image" class="form-label">Hình ảnh đại diện <span class="text-danger">*</span></label>
-                                        <input type="file" class="form-control" id="representative_image" name="representative_image" accept="image/*" required>
-                                        <div class="invalid-feedback">
-                                            Vui lòng chọn hình ảnh đại diện
-                                        </div>
-                                    </div>
-                                    <div id="imagePreview" class="mt-2 d-none">
-                                        <img src="" alt="Hình ảnh xem trước" class="img-fluid img-thumbnail">
-                                    </div>
-                                </div>
+                            <div class="col-md-4">
+                                <label for="width" class="form-label">Chiều ngang (m)</label>
+                                <input type="number" min="0" step="0.1" class="form-control" id="width" name="width">
                             </div>
+                            <div class="col-md-4">
+                                <label for="length" class="form-label">Chiều dài (m)</label>
+                                <input type="number" min="0" step="0.1" class="form-control" id="length" name="length">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="floors" class="form-label">Số tầng</label>
+                                <input type="number" min="0" step="1" class="form-control" id="floors" name="floors">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="bedrooms" class="form-label">Số phòng ngủ</label>
+                                <input type="number" min="0" step="1" class="form-control" id="bedrooms" name="bedrooms">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="legal_status" class="form-label">Pháp lý</label>
+                                <select class="form-select" id="legal_status" name="legal_status">
+                                    <option value="">-- Chọn pháp lý --</option>
+                                    <option value="Sổ đỏ/Sổ hồng">Sổ đỏ/Sổ hồng</option>
+                                    <option value="Hợp đồng mua bán">Hợp đồng mua bán</option>
+                                    <option value="Đang chờ sổ">Đang chờ sổ</option>
+                                    <option value="Giấy tờ khác">Giấy tờ khác</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Images Section -->
+                    <div class="form-section mb-4">
+                        <h2 class="form-section-title">Hình ảnh</h2>
+                        
+                        <div class="mb-3">
+                            <label for="images" class="form-label required">Hình ảnh (tối đa 10 hình)</label>
+                            <input type="file" class="form-control" id="images" name="images" multiple accept="image/*" required>
+                            <div class="form-text">Hình đầu tiên sẽ là hình đại diện. Kích thước tối đa mỗi hình: 5MB</div>
+                            <div class="invalid-feedback">Vui lòng chọn ít nhất 1 hình ảnh</div>
+                            
+                            <!-- Image Preview -->
+                            <div class="preview-container" id="imagePreview"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/posts'">Hủy</button>
+                        <div>
+                            <button type="submit" name="save_draft" value="1" class="btn btn-secondary me-2">Lưu nháp</button>
+                            <button type="submit" class="btn btn-primary">Đăng tin</button>
                         </div>
                     </div>
                 </form>
-            </main>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Summernote JS -->
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
-    <script src="/js/main.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Custom JS -->
     <script>
-        // Initialize rich text editor
-        $(document).ready(function() {
-            $('#content').summernote({
-                height: 300,
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'underline', 'clear']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'video']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ]
-            });
-
-            // Generate slug from title
-            $('#title').on('blur', function() {
-                if ($('#slug').val() === '') {
-                    const title = $(this).val();
-                    const slug = title.toLowerCase()
-                        .replace(/[^\w\s-]/g, '')
-                        .replace(/\s+/g, '-')
-                        .replace(/-+/g, '-');
-                    $('#slug').val(slug);
-                }
-            });
-
-            // Image preview
-            $('#representative_image').on('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('#imagePreview').removeClass('d-none');
-                        $('#imagePreview img').attr('src', e.target.result);
+        // Basic text formatting function
+        function formatText(command) {
+            const textarea = document.getElementById('content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            let formattedText = '';
+            
+            switch(command) {
+                case 'bold':
+                    formattedText = `**${selectedText}**`;
+                    break;
+                case 'italic':
+                    formattedText = `*${selectedText}*`;
+                    break;
+                case 'underline':
+                    formattedText = `_${selectedText}_`;
+                    break;
+                case 'bulletList':
+                    // Split text into lines and add bullet points
+                    formattedText = selectedText.split('\n').map(line => `• ${line}`).join('\n');
+                    break;
+                case 'numberList':
+                    // Split text into lines and add numbers
+                    formattedText = selectedText.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
+                    break;
+                case 'alignLeft':
+                    formattedText = selectedText; // Default alignment
+                    break;
+                case 'alignCenter':
+                    formattedText = selectedText.split('\n').map(line => `    ${line}    `).join('\n');
+                    break;
+                case 'alignRight':
+                    formattedText = selectedText.split('\n').map(line => `        ${line}`).join('\n');
+                    break;
+            }
+            
+            // Replace the selected text with the formatted text
+            textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+            
+            // Set the selection to the end of the newly inserted text
+            textarea.selectionStart = start + formattedText.length;
+            textarea.selectionEnd = start + formattedText.length;
+            
+            // Focus back on the textarea
+            textarea.focus();
+        }
+        
+        // Image preview functionality
+        document.getElementById('images').addEventListener('change', function(event) {
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = '';
+            
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            
+            // Display preview of selected images
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview-item';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-image';
+                    img.alt = 'Preview';
+                    
+                    previewItem.appendChild(img);
+                    
+                    // Add indicator for main image (first image)
+                    if (index === 0) {
+                        const indicator = document.createElement('span');
+                        indicator.className = 'main-image-indicator';
+                        indicator.textContent = 'Chính';
+                        previewItem.appendChild(indicator);
                     }
-                    reader.readAsDataURL(file);
-                } else {
-                    $('#imagePreview').addClass('d-none');
-                }
+                    
+                    previewContainer.appendChild(previewItem);
+                };
+                reader.readAsDataURL(file);
             });
-
-            // Form validation
-            (function() {
-                'use strict'
-                var forms = document.querySelectorAll('.needs-validation')
-                Array.prototype.slice.call(forms)
-                    .forEach(function(form) {
-                        form.addEventListener('submit', function(event) {
-                            if (!form.checkValidity()) {
-                                event.preventDefault()
-                                event.stopPropagation()
-                            }
-                            form.classList.add('was-validated')
-                        }, false)
-                    })
-            })()
         });
+        
+        // Auto-calculate area when width and length are entered
+        document.getElementById('width').addEventListener('input', calculateArea);
+        document.getElementById('length').addEventListener('input', calculateArea);
+        
+        function calculateArea() {
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            
+            if (width > 0 && length > 0) {
+                const area = width * length;
+                document.getElementById('area').value = area.toFixed(1);
+            }
+        }
+        
+        // Form validation
+        (function() {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+        })();
     </script>
 </body>
 </html> 

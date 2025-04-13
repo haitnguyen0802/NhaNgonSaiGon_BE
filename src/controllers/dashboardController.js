@@ -1,54 +1,58 @@
-const Product = require('../models/Product');
-const Post = require('../models/Post');
-const Collaborator = require('../models/Collaborator');
-const Category = require('../models/Category');
+const { Product, Post, Collaborator, Category, User } = require('../models');
+const { Op, Sequelize } = require('sequelize');
 
 // Lấy thông tin tổng quan cho dashboard
 exports.getDashboardStats = async (req, res, next) => {
   try {
     // Thống kê sản phẩm
-    const totalProducts = await Product.countDocuments();
-    const availableProducts = await Product.countDocuments({ status: 'available' });
-    const soldProducts = await Product.countDocuments({ status: 'sold' });
-    const discountedProducts = await Product.countDocuments({ isDiscounted: true });
-    const flashSaleProducts = await Product.countDocuments({ isFlashSale: true });
+    const totalProducts = await Product.count();
+    const availableProducts = await Product.count({ where: { status: 'available' }});
+    const soldProducts = await Product.count({ where: { status: 'sold' }});
+    const discountedProducts = await Product.count({ where: { is_discounted: true }});
+    const flashSaleProducts = await Product.count({ where: { is_flash_sale: true }});
     
     // Thống kê bài đăng
-    const totalPosts = await Post.countDocuments();
-    const publishedPosts = await Post.countDocuments({ status: 'published' });
-    const pendingPosts = await Post.countDocuments({ status: 'pending' });
-    const draftPosts = await Post.countDocuments({ status: 'draft' });
+    const totalPosts = await Post.count();
+    const publishedPosts = await Post.count({ where: { status: 'public' }});
+    const pendingPosts = await Post.count({ where: { status: 'pending' }});
     
     // Thông tin cộng tác viên
-    const totalCollaborators = await Collaborator.countDocuments();
-    const activeCollaborators = await Collaborator.countDocuments({ active: true });
+    const totalCollaborators = await Collaborator.count();
+    const activeCollaborators = await Collaborator.count({ where: { active: true }});
     
     // Thông tin danh mục
-    const totalCategories = await Category.countDocuments();
+    const totalCategories = await Category.count();
     
-    // Lấy 10 sản phẩm được xem nhiều nhất (giả định có trường viewCount)
-    const topProducts = await Product.find()
-      .select('name price status mainImage favoriteCount')
-      .sort('-favoriteCount')
-      .limit(10);
+    // Lấy 10 sản phẩm được xem nhiều nhất
+    const topProducts = await Product.findAll({
+      attributes: ['id', 'title', 'price', 'status', 'representative_image', 'favorite_count'],
+      order: [['favorite_count', 'DESC']],
+      limit: 10
+    });
     
     // Lấy 10 bài đăng mới nhất
-    const recentPosts = await Post.find()
-      .select('title status viewCount mainImage publishDate')
-      .sort('-createdAt')
-      .limit(10);
+    const recentPosts = await Post.findAll({
+      attributes: ['id', 'title', 'status', 'view_count', 'representative_image', 'publish_date'],
+      order: [['created_at', 'DESC']],
+      include: [{ model: Category, as: 'category', attributes: ['name'] }],
+      limit: 10
+    });
     
     // Lấy 5 sản phẩm giảm giá
-    const discountProducts = await Product.find({ isDiscounted: true })
-      .select('name price discountPrice status mainImage')
-      .sort('-updatedAt')
-      .limit(5);
+    const discountProducts = await Product.findAll({
+      where: { is_discounted: true },
+      attributes: ['id', 'title', 'price', 'discount_price', 'status', 'representative_image'],
+      order: [['updated_at', 'DESC']],
+      limit: 5
+    });
     
     // Lấy 5 sản phẩm flash sale
-    const flashSaleItems = await Product.find({ isFlashSale: true })
-      .select('name price discountPrice status mainImage')
-      .sort('-updatedAt')
-      .limit(5);
+    const flashSaleItems = await Product.findAll({
+      where: { is_flash_sale: true },
+      attributes: ['id', 'title', 'price', 'discount_price', 'status', 'representative_image'],
+      order: [['updated_at', 'DESC']],
+      limit: 5
+    });
     
     res.status(200).json({
       success: true,
@@ -64,8 +68,7 @@ exports.getDashboardStats = async (req, res, next) => {
           posts: {
             total: totalPosts,
             published: publishedPosts,
-            pending: pendingPosts,
-            draft: draftPosts
+            pending: pendingPosts
           },
           collaborators: {
             total: totalCollaborators,
@@ -91,48 +94,43 @@ exports.getTimelineStats = async (req, res, next) => {
   try {
     const { period = 'month', limit = 6 } = req.query;
     
-    let timeFormat;
-    let groupBy;
+    let dateFormat, dateGrouping;
     
     // Định dạng thời gian theo yêu cầu
     if (period === 'day') {
-      timeFormat = '%Y-%m-%d';
-      groupBy = { day: { $dayOfMonth: '$createdAt' }, month: { $month: '$createdAt' }, year: { $year: '$createdAt' } };
+      dateFormat = 'YYYY-MM-DD';
+      dateGrouping = Sequelize.fn('DATE', Sequelize.col('created_at'));
     } else if (period === 'week') {
-      timeFormat = '%Y-W%U';
-      groupBy = { week: { $week: '$createdAt' }, year: { $year: '$createdAt' } };
+      dateFormat = 'YYYY-"W"WW';
+      dateGrouping = Sequelize.fn('DATE_FORMAT', Sequelize.col('created_at'), '%Y-W%u');
     } else {
-      timeFormat = '%Y-%m';
-      groupBy = { month: { $month: '$createdAt' }, year: { $year: '$createdAt' } };
+      dateFormat = 'YYYY-MM';
+      dateGrouping = Sequelize.fn('DATE_FORMAT', Sequelize.col('created_at'), '%Y-%m');
     }
     
     // Thống kê sản phẩm theo thời gian
-    const productStats = await Product.aggregate([
-      {
-        $group: {
-          _id: groupBy,
-          count: { $sum: 1 },
-          time: { $first: { $dateToString: { format: timeFormat, date: '$createdAt' } } }
-        }
-      },
-      { $sort: { 'time': -1 } },
-      { $limit: Number(limit) },
-      { $sort: { 'time': 1 } }
-    ]);
+    const productStats = await Product.findAll({
+      attributes: [
+        [dateGrouping, 'time'], 
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: ['time'],
+      order: [['time', 'ASC']],
+      limit: Number(limit),
+      raw: true
+    });
     
     // Thống kê bài đăng theo thời gian
-    const postStats = await Post.aggregate([
-      {
-        $group: {
-          _id: groupBy,
-          count: { $sum: 1 },
-          time: { $first: { $dateToString: { format: timeFormat, date: '$createdAt' } } }
-        }
-      },
-      { $sort: { 'time': -1 } },
-      { $limit: Number(limit) },
-      { $sort: { 'time': 1 } }
-    ]);
+    const postStats = await Post.findAll({
+      attributes: [
+        [dateGrouping, 'time'], 
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: ['time'],
+      order: [['time', 'ASC']],
+      limit: Number(limit),
+      raw: true
+    });
     
     res.status(200).json({
       success: true,
@@ -150,90 +148,56 @@ exports.getTimelineStats = async (req, res, next) => {
 exports.getOverviewStats = async (req, res, next) => {
   try {
     // Thống kê trạng thái sản phẩm
-    const productStatusStats = await Product.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
+    const productStatusStats = await Product.findAll({
+      attributes: [
+        'status', 
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: ['status'],
+      raw: true
+    });
     
     // Thống kê danh mục sản phẩm
-    const productCategoryStats = await Product.aggregate([
-      {
-        $lookup: {
-          from: 'categories',
-          localField: 'category',
-          foreignField: '_id',
-          as: 'categoryInfo'
-        }
-      },
-      {
-        $unwind: {
-          path: '$categoryInfo',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $group: {
-          _id: { id: '$category', name: '$categoryInfo.name' },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: '$_id.id',
-          name: '$_id.name',
-          count: 1
-        }
-      },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
+    const productCategoryStats = await Product.findAll({
+      attributes: [
+        'category_id',
+        [Sequelize.col('category.name'), 'name'],
+        [Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'count']
+      ],
+      include: [
+        { model: Category, as: 'category', attributes: [] }
+      ],
+      group: ['category_id', 'category.name'],
+      order: [[Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'DESC']],
+      limit: 10,
+      raw: true
+    });
     
     // Thống kê bài đăng theo trạng thái
-    const postStatusStats = await Post.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
+    const postStatusStats = await Post.findAll({
+      attributes: [
+        'status', 
+        [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+      ],
+      group: ['status'],
+      raw: true
+    });
     
     // Thống kê số lượng sản phẩm của từng CTV
-    const collaboratorStats = await Product.aggregate([
-      {
-        $lookup: {
-          from: 'collaborators',
-          localField: 'collaborator',
-          foreignField: '_id',
-          as: 'collaboratorInfo'
-        }
-      },
-      {
-        $unwind: {
-          path: '$collaboratorInfo',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $group: {
-          _id: { id: '$collaborator', name: '$collaboratorInfo.name' },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: '$_id.id',
-          name: '$_id.name',
-          count: 1
-        }
-      },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
+    const collaboratorStats = await Product.findAll({
+      attributes: [
+        'collaborator_id',
+        [Sequelize.col('collaborator.name'), 'name'],
+        [Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'count']
+      ],
+      include: [
+        { model: Collaborator, as: 'collaborator', attributes: [] }
+      ],
+      group: ['collaborator_id', 'collaborator.name'],
+      order: [[Sequelize.fn('COUNT', Sequelize.col('Product.id')), 'DESC']],
+      limit: 10,
+      raw: true
+    });
     
     res.status(200).json({
       success: true,

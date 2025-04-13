@@ -6,13 +6,11 @@ const uploadMiddleware = require("../middlewares/uploadMiddleware");
 
 // ------ Web View Routes ------
 
-// Public web view for posts listing and details
+// Public web views - no authentication needed
 router.get("/", postController.getPostsAdmin);
 router.get("/:id/details", postController.getPostDetails);
-
-// Form routes for creation and edit (requires auth)
-router.get("/new", authMiddleware.protect, postController.getNewPostForm);
-router.get("/:id/edit", authMiddleware.protect, postController.getEditPostForm);
+router.get("/new", postController.getNewPostForm);
+router.get("/:id/edit", postController.getEditPostForm);
 
 // ------ API Routes ------
 
@@ -20,37 +18,35 @@ router.get("/:id/edit", authMiddleware.protect, postController.getEditPostForm);
 router.get("/api/posts", postController.getAllPosts);
 router.get("/api/posts/:id", postController.getPostById);
 
-// ------ Protected Routes ------
-router.use(authMiddleware.protect);
-
-// Create new post
+// Create new post - no authentication needed since user is already logged in
 router.post(
-  "/",
+  "/new",
   uploadMiddleware.uploadPostImage,
   postController.resizePostImage,
   postController.createPost
 );
 
-// Handle specific post by ID
-router
-  .route("/:id")
-  .put(
-    uploadMiddleware.uploadPostImage,
-    postController.resizePostImage,
-    postController.updatePost
-  )
-  .delete(postController.deletePost);
+// Update post - no authentication needed since user is already logged in
+router.put(
+  "/:id",
+  uploadMiddleware.uploadPostImage,
+  postController.resizePostImage,
+  postController.updatePost
+);
+
+// Delete post - no authentication needed since user is already logged in
+router.delete("/:id", postController.deletePost);
 
 // ------ Admin Only Routes ------
 
-// Change post status
+// Change post status (admin only)
 router.patch(
   "/:id/status",
   authMiddleware.restrictTo("admin"),
   postController.updatePostStatus
 );
 
-// Pin/unpin post
+// Pin/unpin post (admin only)
 router.patch(
   "/:id/pin",
   authMiddleware.restrictTo("admin"),

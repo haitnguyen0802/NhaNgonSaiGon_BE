@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.title %> | Nhà Ngôn Sài Gòn</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    <% if (typeof extraCSS !== 'undefined') { %>
+        <%- extraCSS %>
+    <% } %>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Page Content -->
+        <div id="content" class="w-100">
+            <!-- Main Content -->
+            <div class="container-fluid">
+                <% if (typeof flashMessage !== 'undefined' && flashMessage.message) { %>
+                    <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
+                        <%= flashMessage.message %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+                
+                <!-- Product Detail -->
+                <div class="container-fluid">
+                    <!-- Page Navigation -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/dashboard">Trang chủ</a></li>
+                            <li class="breadcrumb-item"><a href="/products">Sản phẩm</a></li>
+                            <li class="breadcrumb-item active" aria-current="page"><%= product.title %></li>
+                        </ol>
+                    </nav>
+
+                    <!-- Product Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h2 mb-0"><%= product.title %></h1>
+                        <div>
+                            <a href="/products/<%= product.id %>/edit" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Chỉnh sửa
+                            </a>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Product Information -->
+                    <div class="row">
+                        <!-- Product Images -->
+                        <div class="col-md-5 mb-4">
+                            <div class="card shadow">
+                                <div class="card-body p-0">
+                                    <img src="<%= product.representative_image || '/img/no-image.jpg' %>" alt="<%= product.title %>" class="img-fluid rounded w-100">
+                                    
+                                    <!-- Gallery -->
+                                    <% if (product.images && product.images.length > 0) { %>
+                                        <div class="row mt-3 px-2 pb-2">
+                                            <% product.images.forEach(image => { %>
+                                                <div class="col-3 mb-2">
+                                                    <img src="<%= image.url %>" alt="<%= product.title %>" class="img-thumbnail product-thumbnail">
+                                                </div>
+                                            <% }); %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product Details -->
+                        <div class="col-md-7 mb-4">
+                            <div class="card shadow h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Thông tin chi tiết</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Mã sản phẩm:</div>
+                                        <div class="col-md-8">#<%= product.id %></div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Trạng thái:</div>
+                                        <div class="col-md-8">
+                                            <span class="badge bg-<%= 
+                                                product.status === 'available' ? 'success' : 
+                                                product.status === 'sold' ? 'secondary' : 
+                                                product.status === 'discounted' ? 'warning' : 'danger' 
+                                            %>">
+                                                <%= 
+                                                    product.status === 'available' ? 'Sẵn có' : 
+                                                    product.status === 'sold' ? 'Đã bán' : 
+                                                    product.status === 'discounted' ? 'Giảm giá' : 'Hết hàng' 
+                                                %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Danh mục:</div>
+                                        <div class="col-md-8"><%= product.category || 'Chưa phân loại' %></div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Giá gốc:</div>
+                                        <div class="col-md-8"><%= product.price.toLocaleString('vi-VN') %> đ</div>
+                                    </div>
+                                    
+                                    <% if (product.discount_price && product.discount_price > 0) { %>
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 fw-bold">Giá khuyến mãi:</div>
+                                            <div class="col-md-8 text-danger"><%= product.discount_price.toLocaleString('vi-VN') %> đ</div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 fw-bold">Tiết kiệm:</div>
+                                            <div class="col-md-8 text-success">
+                                                <%= (product.price - product.discount_price).toLocaleString('vi-VN') %> đ
+                                                (<%= Math.round((1 - product.discount_price / product.price) * 100) %>%)
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Vị trí:</div>
+                                        <div class="col-md-8"><%= product.location || 'Chưa có thông tin' %></div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Cộng tác viên:</div>
+                                        <div class="col-md-8">
+                                            <% if (product.collaborator) { %>
+                                                <a href="/collaborators/<%= product.collaborator.id %>">
+                                                    <%= product.collaborator.name %>
+                                                </a>
+                                            <% } else { %>
+                                                Không có
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Ngày tạo:</div>
+                                        <div class="col-md-8"><%= new Date(product.created_at).toLocaleDateString('vi-VN') %></div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Cập nhật lần cuối:</div>
+                                        <div class="col-md-8"><%= new Date(product.updated_at).toLocaleDateString('vi-VN') %></div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="mb-0">
+                                        <div class="fw-bold mb-2">Mô tả:</div>
+                                        <div><%= product.description || 'Không có mô tả' %></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Xác nhận xóa</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Bạn có chắc chắn muốn xóa sản phẩm "<%= product.title %>" không?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <form action="/products/<%= product.id %>/delete" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger">Xóa</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/main.js"></script>
+    <% if (typeof extraJS !== 'undefined') { %>
+        <%- extraJS %>
+    <% } %>
+</body>
+</html> 
