@@ -5,7 +5,16 @@ const AppError = require('../utils/errorHandler');
 // Định nghĩa nơi lưu trữ và tên file
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../public/uploads'));
+    let uploadPath = path.join(__dirname, '../public/uploads');
+    
+    // Determine specific folder based on usage
+    if (file.fieldname === 'image' && req.baseUrl.includes('/posts')) {
+      uploadPath = path.join(__dirname, '../public/img/posts');
+    } else if (file.fieldname.includes('Image') || file.fieldname.includes('images')) {
+      uploadPath = path.join(__dirname, '../public/img/products');
+    }
+    
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     // Tạo tên file duy nhất: timestamp + tên gốc
@@ -35,6 +44,9 @@ const upload = multer({
 
 // Middleware để xử lý hình ảnh đại diện (1 ảnh)
 exports.uploadSingleImage = upload.single('image');
+
+// Middleware for post images - single image
+exports.uploadPostImage = upload.single('image');
 
 // Middleware để xử lý hình ảnh chính và các hình ảnh phụ
 exports.uploadProductImages = upload.fields([

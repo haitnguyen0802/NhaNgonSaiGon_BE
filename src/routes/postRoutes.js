@@ -1,152 +1,67 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const postController = require('../controllers/postController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const uploadMiddleware = require('../middlewares/uploadMiddleware');
-const { Post, Product } = require('../models/index');
-const { Op } = require('sequelize');
+const postController = require("../controllers/postController");
+const authMiddleware = require("../middlewares/authMiddleware");
+const uploadMiddleware = require("../middlewares/uploadMiddleware");
 
-// API công khai
-router.get('/', postController.getAllPosts);
-router.get('/:id', postController.getPostById);
+// ------ Web View Routes ------
 
-// Các route cần xác thực
+// Public web view for posts listing and details
+router.get("/", postController.getPostsAdmin);
+router.get("/:id/details", postController.getPostDetails);
+
+// Form routes for creation and edit (requires auth)
+router.get("/new", authMiddleware.protect, postController.getNewPostForm);
+router.get("/:id/edit", authMiddleware.protect, postController.getEditPostForm);
+
+// ------ API Routes ------
+
+// Public API endpoints
+router.get("/api/posts", postController.getAllPosts);
+router.get("/api/posts/:id", postController.getPostById);
+
+// ------ Protected Routes ------
 router.use(authMiddleware.protect);
 
-// Tạo bài đăng mới
-router.post('/', 
-  uploadMiddleware.uploadPostImages,
-  uploadMiddleware.handleUploadError,
+// Create new post
+router.post(
+  "/",
+  uploadMiddleware.uploadPostImage,
+  postController.resizePostImage,
   postController.createPost
 );
 
-// Xử lý bài đăng cụ thể theo ID
-router.route('/:id')
+// Handle specific post by ID
+router
+  .route("/:id")
   .put(
-    uploadMiddleware.uploadPostImages,
-    uploadMiddleware.handleUploadError,
+    uploadMiddleware.uploadPostImage,
+    postController.resizePostImage,
     postController.updatePost
   )
   .delete(postController.deletePost);
 
-// Thay đổi trạng thái bài đăng
-router.patch('/:id/status', authMiddleware.restrictTo('admin'), postController.updatePostStatus);
+// ------ Admin Only Routes ------
 
-// Ghim / bỏ ghim bài đăng
-router.patch('/:id/pin', authMiddleware.restrictTo('admin'), postController.togglePinPost);
+// Change post status
+router.patch(
+  "/:id/status",
+  authMiddleware.restrictTo("admin"),
+  postController.updatePostStatus
+);
 
-// List all posts
-router.get('/', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-    
-    // Build filter conditions
-    const where = {};
-    
-    if (req.query.status) {
-      where.status = req.query.status;
-    }
-    
-    if (req.query.search) {
-      // This would typically search in post title/content, but we'll adapt to the database structure
-      where.category = { [Op.like]: `%${req.query.search}%` };
-    }
-    
-    // Get posts with filters
-    const { count, rows: posts } = await Post.findAndCountAll({
-      where,
-      include: [
-        { model: Product, as: 'product' }
-      ],
-      limit,
-      offset,
-      order: [['created_at', 'DESC']]
-    });
-    
-    // Calculate pagination
-    const totalPages = Math.ceil(count / limit);
-    
-    // Build query string for pagination
-    let queryString = '';
-    if (req.query.status) queryString += `&status=${req.query.status}`;
-    if (req.query.search) queryString += `&search=${req.query.search}`;
-    if (req.query.category) queryString += `&category=${req.query.category}`;
-    
-    // Mock categories for filter dropdown
-    const categories = [
-      { id: 1, name: 'Tin tức' },
-      { id: 2, name: 'Khuyến mãi' },
-      { id: 3, name: 'Sự kiện' },
-      { id: 4, name: 'Thông báo' }
-    ];
-    
-    res.render('posts/index', {
-      title: 'Quản lý tin đăng',
-      active: 'posts',
-      posts,
-      categories,
-      totalPosts: count,
-      currentPage: page,
-      totalPages,
-      queryString,
-      search: req.query.search || '',
-      status: req.query.status || '',
-      selectedCategory: req.query.category || ''
-    });
-  } catch (err) {
-    console.error('Post listing error:', err);
-    res.status(500).render('error', {
-      message: 'Không thể tải danh sách tin đăng',
-      error: process.env.NODE_ENV === 'development' ? err : {}
-    });
-  }
-});
+// Pin/unpin post
+router.patch(
+  "/:id/pin",
+  authMiddleware.restrictTo("admin"),
+  postController.togglePinPost
+);
 
-// API endpoint to list posts
-router.get('/api', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-    
-    // Build filter conditions
-    const where = {};
-    
-    if (req.query.status) {
-      where.status = req.query.status;
-    }
-    
-    if (req.query.category) {
-      where.category = req.query.category;
-    }
-    
-    // Get posts with filters
-    const { count, rows: posts } = await Post.findAndCountAll({
-      where,
-      include: [
-        { model: Product, as: 'product' }
-      ],
-      limit,
-      offset,
-      order: [['created_at', 'DESC']]
-    });
-    
-    res.json({
-      success: true,
-      data: {
-        posts,
-        pagination: {
-          total: count,
-          page,
-          totalPages: Math.ceil(count / limit)
-        }
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
+// Post statistics (admin only)
+router.get(
+  "/stats",
+  authMiddleware.restrictTo("admin"),
+  postController.getPostStats
+);
 
-module.exports = router; 
+module.exports = router;

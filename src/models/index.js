@@ -15,6 +15,16 @@ ProductImage.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 // Post associations
 Post.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+Post.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
+Post.belongsTo(User, { foreignKey: 'author_id', as: 'author' });
+
+// User associations
+User.hasMany(Post, { foreignKey: 'author_id', as: 'posts' });
+
+// Category associations
+Category.hasMany(Post, { foreignKey: 'category_id', as: 'posts' });
+Category.belongsTo(Category, { as: 'parentCategory', foreignKey: 'parent_id' });
+Category.hasMany(Category, { as: 'childCategories', foreignKey: 'parent_id' });
 
 // Collaborator associations
 Collaborator.hasMany(Product, { foreignKey: 'collaborator_id', as: 'products' });

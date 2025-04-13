@@ -1,275 +1,327 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | Nhà Ngon Sài Gòn</title>
+    <title>
+        <%= title %> | Nhà Ngon Sài Gòn
+    </title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
-    <% if (typeof extraCSS !== 'undefined') { %>
+    <% if (typeof extraCSS !=='undefined' ) { %>
         <%- extraCSS %>
-    <% } %>
+            <% } %>
 </head>
+
 <body>
     <div class="wrapper">
-        <!-- Sidebar -->
-        <nav id="sidebar" class="bg-dark text-white">
-            <div class="sidebar-header p-3">
-                <h3>Nhà Ngon Sài Gòn</h3>
-            </div>
-
-            <ul class="list-unstyled components">
-                <li class="<%= active === 'dashboard' ? 'active' : '' %>">
-                    <a href="/dashboard" class="nav-link text-white">
-                        <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
-                    </a>
-                </li>
-                <li class="<%= active === 'posts' ? 'active' : '' %>">
-                    <a href="/posts" class="nav-link text-white">
-                        <i class="fas fa-newspaper me-2"></i> Quản lý tin đăng
-                    </a>
-                </li>
-                <li class="<%= active === 'products' ? 'active' : '' %>">
-                    <a href="/products" class="nav-link text-white">
-                        <i class="fas fa-box me-2"></i> Quản lý sản phẩm
-                    </a>
-                </li>
-                <li class="<%= active === 'categories' ? 'active' : '' %>">
-                    <a href="/categories" class="nav-link text-white">
-                        <i class="fas fa-tags me-2"></i> Danh mục
-                    </a>
-                </li>
-                <li class="<%= active === 'collaborators' ? 'active' : '' %>">
-                    <a href="/collaborators" class="nav-link text-white">
-                        <i class="fas fa-users me-2"></i> Cộng tác viên
-                    </a>
-                </li>
-            </ul>
-        </nav>
-
         <!-- Page Content -->
         <div id="content" class="w-100">
-            <!-- Top Navbar -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <div class="container-fluid">
-                    <button type="button" id="sidebarCollapse" class="btn btn-info">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                    <div class="d-flex ms-auto">
-                        <div class="dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <img src="<%= user.avatar || '/img/default-avatar.png' %>" class="avatar rounded-circle" width="32" height="32">
-                                <span class="ms-2"><%= user.name %></span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="/profile">Hồ sơ</a></li>
-                                <li><a class="dropdown-item" href="/settings">Cài đặt</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/logout">Đăng xuất</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
             <!-- Main Content -->
             <div class="container-fluid">
-                <% if (typeof flashMessage !== 'undefined' && flashMessage.message) { %>
+                <% if (typeof flashMessage !=='undefined' && flashMessage.message) { %>
                     <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
                         <%= flashMessage.message %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                <% } %>
-                
-                <!-- Posts Page -->
-                <div class="container-fluid">
-                    <!-- Page Heading -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Quản lý tin đăng</h1>
-                        <a href="/posts/create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                            <i class="fas fa-plus fa-sm text-white-50"></i> Đăng tin mới
-                        </a>
-                    </div>
+                    <% } %>
 
-                    <!-- Filters -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Lọc tin đăng</h6>
-                        </div>
-                        <div class="card-body">
-                            <form method="GET" action="/posts" class="row">
-                                <div class="col-md-3 mb-3">
-                                    <label for="category">Danh mục</label>
-                                    <select class="form-select" id="category" name="category">
-                                        <option value="">Tất cả danh mục</option>
-                                        <% categories.forEach(category => { %>
-                                            <option value="<%= category.id %>" <%= selectedCategory == category.id ? 'selected' : '' %>>
-                                                <%= category.name %>
-                                            </option>
-                                        <% }); %>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-3 mb-3">
-                                    <label for="status">Trạng thái</label>
-                                    <select class="form-select" id="status" name="status">
-                                        <option value="">Tất cả trạng thái</option>
-                                        <option value="published" <%= status === 'published' ? 'selected' : '' %>>Đã đăng</option>
-                                        <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Chờ duyệt</option>
-                                        <option value="draft" <%= status === 'draft' ? 'selected' : '' %>>Nháp</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-3 mb-3">
-                                    <label for="search">Tìm kiếm</label>
-                                    <input type="text" class="form-control" id="search" name="search" placeholder="Tiêu đề tin đăng..." value="<%= search %>">
-                                </div>
-                                
-                                <div class="col-md-3 mb-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary">Lọc</button>
-                                    <a href="/posts" class="btn btn-secondary ms-2">Đặt lại</a>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Posts Table -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 font-weight-bold text-primary">Danh sách tin đăng</h6>
-                            <div>
-                                <span>Hiển thị <%= posts.length %> / <%= totalPosts %> tin đăng</span>
+                        <!-- Posts Page -->
+                        <div class="container-fluid">
+                            <!-- Page Heading -->
+                            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                                <h1 class="h3 mb-0 text-gray-800">Quản lý tin đăng</h1>
+                                <a href="/posts/new" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                                    <i class="fas fa-plus fa-sm text-white-50"></i> Đăng tin mới
+                                </a>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Hình ảnh</th>
-                                            <th>Danh mục</th>
-                                            <th>Tiêu đề</th>
-                                            <th>Lượt xem</th>
-                                            <th>Trạng thái</th>
-                                            <th>Ngày đăng</th>
-                                            <th>Ghim</th>
-                                            <th>Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% posts.forEach(post => { %>
-                                            <tr>
-                                                <td class="text-center">
-                                                    <img src="<%= post.main_image || '/img/no-image.jpg' %>" alt="<%= post.title %>" class="product-image">
-                                                </td>
-                                                <td><%= post.Category ? post.Category.name : 'N/A' %></td>
-                                                <td><%= post.title %></td>
-                                                <td><%= post.view_count %></td>
-                                                <td>
-                                                    <span class="badge bg-<%= 
-                                                        post.status === 'published' ? 'success' : 
-                                                        post.status === 'pending' ? 'warning' : 'secondary' 
-                                                    %>">
-                                                        <%= 
-                                                            post.status === 'published' ? 'Đã đăng' : 
-                                                            post.status === 'pending' ? 'Chờ duyệt' : 'Nháp' 
-                                                        %>
-                                                    </span>
-                                                </td>
-                                                <td><%= post.publish_date ? new Date(post.publish_date).toLocaleDateString('vi-VN') : 'Chưa đăng' %></td>
-                                                <td class="text-center">
-                                                    <% if (post.is_pinned) { %>
-                                                        <form action="/posts/<%= post.id %>/unpin" method="POST" style="display: inline;">
-                                                            <button type="submit" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" title="Bỏ ghim">
-                                                                <i class="fas fa-thumbtack"></i>
-                                                            </button>
-                                                        </form>
-                                                    <% } else { %>
-                                                        <form action="/posts/<%= post.id %>/pin" method="POST" style="display: inline;">
-                                                            <button type="submit" class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip" title="Ghim">
-                                                                <i class="fas fa-thumbtack"></i>
-                                                            </button>
-                                                        </form>
-                                                    <% } %>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <a href="/posts/<%= post.id %>" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Xem chi tiết">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                        <a href="/posts/<%= post.id %>/edit" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Sửa">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<%= post.id %>" title="Xóa">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    <!-- Delete Modal -->
-                                                    <div class="modal fade" id="deleteModal<%= post.id %>" tabindex="-1" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title">Xác nhận xóa</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                            <!-- Filters -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Lọc tin đăng</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="GET" action="/posts" class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label for="category">Danh mục</label>
+                                            <select class="form-select" id="category" name="category">
+                                                <option value="">Tất cả danh mục</option>
+                                                <% if(typeof categories !=='undefined' ) { %>
+                                                    <% categories.forEach(category=> { %>
+                                                        <option value="<%= category.id %>"
+                                                            <%=req.query.category==category.id ? 'selected' : '' %>>
+                                                            <%= category.name %>
+                                                        </option>
+                                                        <% }); %>
+                                                            <% } %>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-3 mb-3">
+                                            <label for="status">Trạng thái</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="">Tất cả trạng thái</option>
+                                                <option value="public" <%=req.query.status==='public' ? 'selected' : ''
+                                                    %>>Đã đăng</option>
+                                                <option value="pending" <%=req.query.status==='pending' ? 'selected'
+                                                    : '' %>>Chờ duyệt</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-3 mb-3">
+                                            <label for="search">Tìm kiếm</label>
+                                            <input type="text" class="form-control" id="search" name="search"
+                                                placeholder="Tiêu đề tin đăng..." value="<%= req.query.search || '' %>">
+                                        </div>
+
+                                        <div class="col-md-3 mb-3 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary">Lọc</button>
+                                            <a href="/posts" class="btn btn-secondary ms-2">Đặt lại</a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Posts Table -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">Danh sách tin đăng</h6>
+                                    <div>
+                                        <span>Hiển thị <%= posts.length %> / <%= totalPosts %> tin đăng</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Hình ảnh</th>
+                                                    <th>Tiêu đề</th>
+                                                    <th>Danh mục</th>
+                                                    <th>Lượt xem</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Ngày đăng</th>
+                                                    <th>Ghim</th>
+                                                    <th>Thao tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if(posts && posts.length> 0) { %>
+                                                    <% posts.forEach(post=> { %>
+                                                        <tr>
+                                                            <td class="text-center">
+                                                                <% if(post.representative_image) { %>
+                                                                    <img src="/img/posts/<%= post.representative_image %>"
+                                                                        alt="<%= post.title %>" class="img-thumbnail"
+                                                                        style="width: 80px; height: 60px; object-fit: cover;">
+                                                                    <% } else { %>
+                                                                        <div class="bg-light text-center"
+                                                                            style="width: 80px; height: 60px; line-height: 60px;">
+                                                                            <i
+                                                                                class="fa-regular fa-image text-muted"></i>
+                                                                        </div>
+                                                                        <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <div class="fw-semibold">
+                                                                    <%= post.title %>
                                                                 </div>
-                                                                <div class="modal-body">
-                                                                    Bạn có chắc chắn muốn xóa tin đăng "<%= post.title %>"?
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                                                    <form action="/posts/<%= post.id %>?_method=DELETE" method="POST" style="display: inline;">
-                                                                        <button type="submit" class="btn btn-danger">Xóa</button>
+                                                                <% if(post.is_pinned) { %>
+                                                                    <span class="badge bg-warning">Đã ghim</span>
+                                                                    <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <%= post.category ? post.category.name
+                                                                    : 'Không có danh mục' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= post.view_count %>
+                                                            </td>
+                                                            <td>
+                                                                <% if(post.status==='pending' ) { %>
+                                                                    <span class="badge bg-warning text-dark">Chờ
+                                                                        duyệt</span>
+                                                                    <% } else if(post.status==='public' ) { %>
+                                                                        <span class="badge bg-success">Công khai</span>
+                                                                        <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <%= post.publish_date ? new
+                                                                    Date(post.publish_date).toLocaleDateString('vi-VN')
+                                                                    : 'Chưa đăng' %>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <% if(post.is_pinned) { %>
+                                                                    <form
+                                                                        action="/posts/<%= post.id %>/pin?_method=PATCH"
+                                                                        method="POST" style="display: inline;">
+                                                                        <input type="hidden" name="is_pinned"
+                                                                            value="false">
+                                                                        <button type="submit"
+                                                                            class="btn btn-warning btn-sm"
+                                                                            data-bs-toggle="tooltip" title="Bỏ ghim">
+                                                                            <i class="fas fa-thumbtack"></i>
+                                                                        </button>
                                                                     </form>
+                                                                    <% } else { %>
+                                                                        <form
+                                                                            action="/posts/<%= post.id %>/pin?_method=PATCH"
+                                                                            method="POST" style="display: inline;">
+                                                                            <input type="hidden" name="is_pinned"
+                                                                                value="true">
+                                                                            <button type="submit"
+                                                                                class="btn btn-outline-secondary btn-sm"
+                                                                                data-bs-toggle="tooltip" title="Ghim">
+                                                                                <i class="fas fa-thumbtack"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                        <% } %>
+                                                            </td>
+                                                            <td>
+                                                                <div class="btn-group" role="group">
+                                                                    <a href="/posts/<%= post.id %>/details"
+                                                                        class="btn btn-sm btn-outline-info"
+                                                                        title="Xem chi tiết">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </a>
+                                                                    <a href="/posts/<%= post.id %>/edit"
+                                                                        class="btn btn-sm btn-outline-primary"
+                                                                        title="Chỉnh sửa">
+                                                                        <i class="fas fa-pen-to-square"></i>
+                                                                    </a>
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-outline-danger"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#deleteModal<%= post.id %>"
+                                                                        title="Xóa bài viết">
+                                                                        <i class="fas fa-trash-can"></i>
+                                                                    </button>
                                                                 </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <% }); %>
-                                        
-                                        <% if (posts.length === 0) { %>
-                                            <tr>
-                                                <td colspan="8" class="text-center">Không có tin đăng nào.</td>
-                                            </tr>
+
+                                                                <!-- Delete Modal -->
+                                                                <div class="modal fade" id="deleteModal<%= post.id %>"
+                                                                    tabindex="-1"
+                                                                    aria-labelledby="deleteModalLabel<%= post.id %>"
+                                                                    aria-hidden="true">
+                                                                    <div class="modal-dialog">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title"
+                                                                                    id="deleteModalLabel<%= post.id %>">
+                                                                                    Xác nhận xóa</h5>
+                                                                                <button type="button" class="btn-close"
+                                                                                    data-bs-dismiss="modal"
+                                                                                    aria-label="Close"></button>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                Bạn có chắc chắn muốn xóa bài viết "<%=
+                                                                                    post.title %>"?
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button"
+                                                                                    class="btn btn-secondary"
+                                                                                    data-bs-dismiss="modal">Hủy</button>
+                                                                                <form
+                                                                                    action="/posts/<%= post.id %>?_method=DELETE"
+                                                                                    method="POST">
+                                                                                    <button type="submit"
+                                                                                        class="btn btn-danger">Xác nhận
+                                                                                        xóa</button>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                                            <% } else { %>
+                                                                <tr>
+                                                                    <td colspan="8" class="text-center py-4">
+                                                                        <div class="text-muted">
+                                                                            <i
+                                                                                class="fa-regular fa-folder-open fs-4 mb-3"></i>
+                                                                            <p>Không có bài viết nào</p>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination -->
+                                    <% if(typeof totalPages !=='undefined' && totalPages> 1) { %>
+                                        <nav aria-label="Pagination" class="d-flex justify-content-center mt-4">
+                                            <ul class="pagination">
+                                                <% if(currentPage> 1) { %>
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                            href="/posts?page=<%= currentPage - 1 %><%= req.query.category ? '&category=' + req.query.category : '' %><%= req.query.status ? '&status=' + req.query.status : '' %><%= req.query.search ? '&search=' + req.query.search : '' %>">
+                                                            <i class="fa-solid fa-chevron-left"></i>
+                                                        </a>
+                                                    </li>
+                                                    <% } else { %>
+                                                        <li class="page-item disabled">
+                                                            <span class="page-link"><i
+                                                                    class="fa-solid fa-chevron-left"></i></span>
+                                                        </li>
+                                                        <% } %>
+
+                                                            <% for(let i=1; i <=totalPages; i++) { %>
+                                                                <% if(i===currentPage) { %>
+                                                                    <li class="page-item active" aria-current="page">
+                                                                        <span class="page-link">
+                                                                            <%= i %>
+                                                                        </span>
+                                                                    </li>
+                                                                    <% } else if(i <=2 || i>= totalPages - 1 ||
+                                                                        Math.abs(i - currentPage) <= 1) { %>
+                                                                            <li class="page-item">
+                                                                                <a class="page-link"
+                                                                                    href="/posts?page=<%= i %><%= req.query.category ? '&category=' + req.query.category : '' %><%= req.query.status ? '&status=' + req.query.status : '' %><%= req.query.search ? '&search=' + req.query.search : '' %>">
+                                                                                    <%= i %>
+                                                                                </a>
+                                                                            </li>
+                                                                            <% } else if(i===3 && currentPage> 4 || i
+                                                                                === totalPages - 2 && currentPage <
+                                                                                    totalPages - 3) { %>
+                                                                                    <li class="page-item disabled">
+                                                                                        <span
+                                                                                            class="page-link">...</span>
+                                                                                    </li>
+                                                                                    <% } %>
+                                                                                        <% } %>
+
+                                                                                            <% if(currentPage <
+                                                                                                totalPages) { %>
+                                                                                                <li class="page-item">
+                                                                                                    <a class="page-link"
+                                                                                                        href="/posts?page=<%= currentPage + 1 %><%= req.query.category ? '&category=' + req.query.category : '' %><%= req.query.status ? '&status=' + req.query.status : '' %><%= req.query.search ? '&search=' + req.query.search : '' %>">
+                                                                                                        <i
+                                                                                                            class="fa-solid fa-chevron-right"></i>
+                                                                                                    </a>
+                                                                                                </li>
+                                                                                                <% } else { %>
+                                                                                                    <li
+                                                                                                        class="page-item disabled">
+                                                                                                        <span
+                                                                                                            class="page-link"><i
+                                                                                                                class="fa-solid fa-chevron-right"></i></span>
+                                                                                                    </li>
+                                                                                                    <% } %>
+                                            </ul>
+                                        </nav>
                                         <% } %>
-                                    </tbody>
-                                </table>
+                                </div>
                             </div>
-                            
-                            <!-- Pagination -->
-                            <% if (totalPages > 1) { %>
-                                <nav aria-label="Page navigation">
-                                    <ul class="pagination justify-content-center">
-                                        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                                            <a class="page-link" href="/posts?page=<%= currentPage - 1 %><%= queryString %>" aria-label="Previous">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                        
-                                        <% for (let i = 1; i <= totalPages; i++) { %>
-                                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                                <a class="page-link" href="/posts?page=<%= i %><%= queryString %>"><%= i %></a>
-                                            </li>
-                                        <% } %>
-                                        
-                                        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                                            <a class="page-link" href="/posts?page=<%= currentPage + 1 %><%= queryString %>" aria-label="Next">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            <% } %>
                         </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -280,8 +332,9 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Custom JS -->
     <script src="/js/main.js"></script>
-    <% if (typeof extraJS !== 'undefined') { %>
+    <% if (typeof extraJS !=='undefined' ) { %>
         <%- extraJS %>
-    <% } %>
+            <% } %>
 </body>
-</html> 
+
+</html>

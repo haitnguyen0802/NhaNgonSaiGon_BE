@@ -6,32 +6,10 @@ const uploadMiddleware = require('../middlewares/uploadMiddleware');
 const { Product, Collaborator, ProductImage } = require('../models/index');
 const { Op } = require('sequelize');
 
-// Lấy thống kê sản phẩm
+// Lấy thống kê sản phẩm - Public route
 router.get('/stats', productController.getProductStats);
 
-// Các route cần xác thực
-router.use(authMiddleware.protect);
-
-// Lấy danh sách sản phẩm và tạo sản phẩm mới
-router.route('/')
-  .get(productController.getAllProducts)
-  .post(
-    uploadMiddleware.uploadProductImages,
-    uploadMiddleware.handleUploadError,
-    productController.createProduct
-  );
-
-// Xử lý sản phẩm cụ thể theo ID
-router.route('/:id')
-  .get(productController.getProductById)
-  .put(
-    uploadMiddleware.uploadProductImages,
-    uploadMiddleware.handleUploadError,
-    productController.updateProduct
-  )
-  .delete(authMiddleware.restrictTo('admin'), productController.deleteProduct);
-
-// List all products
+// List all products - Web View - Public route
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -98,7 +76,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// API endpoint to list products
+// API endpoint to list products - Public route
 router.get('/api', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -143,5 +121,60 @@ router.get('/api', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// Route for product detail - Public view
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id, {
+      include: [
+        { model: Collaborator, as: 'collaborator' },
+        { model: ProductImage, as: 'images' }
+      ]
+    });
+    
+    if (!product) {
+      return res.status(404).render('error', {
+        message: 'Không tìm thấy sản phẩm',
+        error: {}
+      });
+    }
+    
+    res.render('products/detail', {
+      title: product.title || 'Chi tiết sản phẩm',
+      active: 'products',
+      product
+    });
+  } catch (err) {
+    console.error('Product detail error:', err);
+    res.status(500).render('error', {
+      message: 'Không thể tải chi tiết sản phẩm',
+      error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+  }
+});
+
+// Routes that DO require authentication below
+// Create new product - Protected
+router.post('/',
+  authMiddleware.protect,
+  uploadMiddleware.uploadProductImages,
+  uploadMiddleware.handleUploadError,
+  productController.createProduct
+);
+
+// Update product - Protected
+router.put('/:id',
+  authMiddleware.protect,
+  uploadMiddleware.uploadProductImages,
+  uploadMiddleware.handleUploadError,
+  productController.updateProduct
+);
+
+// Delete product - Protected (Admin only)
+router.delete('/:id', 
+  authMiddleware.protect,
+  authMiddleware.restrictTo('admin'),
+  productController.deleteProduct
+);
 
 module.exports = router; 

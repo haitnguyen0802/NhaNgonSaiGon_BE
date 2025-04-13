@@ -79,11 +79,33 @@
 
             <!-- Main Content -->
             <div class="container-fluid">
-                <% if (typeof flashMessage !== 'undefined' && flashMessage.message) { %>
-                    <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
-                        <%= flashMessage.message %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <!-- Flash Messages -->
+                <% if (success && success.length > 0) { %>
+                  <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <%= success %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <% } %>
+                
+                <% if (error && error.length > 0) { %>
+                  <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <%= error %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <% } %>
+                
+                <% if (info && info.length > 0) { %>
+                  <div class="alert alert-info alert-dismissible fade show mt-3" role="alert">
+                    <%= info %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <% } %>
+                
+                <% if (warning && warning.length > 0) { %>
+                  <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                    <%= warning %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
                 <% } %>
                 
                 <%- body %>
@@ -100,5 +122,24 @@
     <% if (typeof extraJS !== 'undefined') { %>
         <%- extraJS %>
     <% } %>
+    
+    <!-- Auto-close alerts after 5 seconds -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get all alert elements
+        const alerts = document.querySelectorAll('.alert');
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(function() {
+          alerts.forEach(function(alert) {
+            // Create and dispatch close event
+            const closeButton = alert.querySelector('.btn-close');
+            if (closeButton) {
+              closeButton.click();
+            }
+          });
+        }, 5000);
+      });
+    </script>
 </body>
 </html> 

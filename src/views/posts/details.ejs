@@ -1,0 +1,206 @@
+<div class="container py-4">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+      <li class="breadcrumb-item"><a href="/posts">Bài viết</a></li>
+      <% if(post.category) { %>
+        <li class="breadcrumb-item"><a href="/posts?category=<%= post.category.id %>"><%= post.category.name %></a></li>
+      <% } %>
+      <li class="breadcrumb-item active" aria-current="page"><%= post.title %></li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8 mb-4 mb-lg-0">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h1 class="article-title fs-2 fw-bold mb-3"><%= post.title %></h1>
+          
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="post-meta text-muted">
+              <span>
+                <i class="fa-regular fa-calendar me-1"></i>
+                <%= new Date(post.publish_date || post.created_at).toLocaleDateString('vi-VN') %>
+              </span>
+              <span class="ms-3">
+                <i class="fa-regular fa-eye me-1"></i>
+                <%= post.view_count || 0 %> lượt xem
+              </span>
+              <% if(post.author) { %>
+                <span class="ms-3">
+                  <i class="fa-regular fa-user me-1"></i>
+                  <%= post.author.name %>
+                </span>
+              <% } %>
+            </div>
+            
+            <% if(post.category) { %>
+              <a href="/posts?category=<%= post.category.id %>" class="badge bg-primary text-decoration-none">
+                <%= post.category.name %>
+              </a>
+            <% } %>
+          </div>
+          
+          <% if(post.representative_image) { %>
+            <figure class="text-center mb-4">
+              <img 
+                src="/img/posts/<%= post.representative_image %>" 
+                class="img-fluid rounded" 
+                alt="<%= post.title %>"
+                style="max-height: 500px; object-fit: contain;"
+              >
+            </figure>
+          <% } %>
+          
+          <div class="post-content">
+            <%- post.content %>
+          </div>
+          
+          <% if(post.is_pinned) { %>
+            <div class="alert alert-warning mt-4">
+              <i class="fa-solid fa-thumbtack me-2"></i>
+              Bài viết đã được ghim
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- Product Section if associated with a product -->
+      <% if(post.product) { %>
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Sản phẩm liên quan</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4 mb-3 mb-md-0">
+                <% if(post.product.representative_image) { %>
+                  <img 
+                    src="/img/products/<%= post.product.representative_image %>" 
+                    class="img-fluid rounded" 
+                    alt="<%= post.product.title %>"
+                    style="width: 100%; height: 200px; object-fit: cover;"
+                  >
+                <% } else { %>
+                  <div class="bg-light d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <i class="fa-regular fa-image fa-3x text-muted"></i>
+                  </div>
+                <% } %>
+              </div>
+              <div class="col-md-8">
+                <h5 class="fw-bold"><%= post.product.title %></h5>
+                <p class="mb-2">
+                  <i class="fa-solid fa-location-dot me-2 text-danger"></i>
+                  <%= post.product.location %>
+                </p>
+                <p class="mb-3 fs-5 fw-bold text-primary"><%= post.product.price.toLocaleString('vi-VN') %> đ</p>
+                <div>
+                  <% if(post.product.status === 'available') { %>
+                    <span class="badge bg-success">Còn hàng</span>
+                  <% } else if(post.product.status === 'sold') { %>
+                    <span class="badge bg-danger">Đã bán</span>
+                  <% } else if(post.product.status === 'pending') { %>
+                    <span class="badge bg-warning text-dark">Đang chờ xử lý</span>
+                  <% } %>
+                </div>
+                <a href="/products/<%= post.product.id %>" class="btn btn-primary mt-3">
+                  Xem chi tiết sản phẩm
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+      
+      <!-- Social Share Buttons -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="mb-3">Chia sẻ bài viết</h5>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-primary">
+              <i class="fa-brands fa-facebook-f me-2"></i>Facebook
+            </button>
+            <button class="btn btn-sm btn-info">
+              <i class="fa-brands fa-twitter me-2"></i>Twitter
+            </button>
+            <button class="btn btn-sm btn-danger">
+              <i class="fa-brands fa-pinterest me-2"></i>Pinterest
+            </button>
+            <button class="btn btn-sm btn-success">
+              <i class="fa-solid fa-envelope me-2"></i>Email
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Related Posts -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Bài viết liên quan</h5>
+        </div>
+        <div class="card-body">
+          <% if(relatedPosts && relatedPosts.length > 0) { %>
+            <div class="list-group list-group-flush">
+              <% relatedPosts.forEach(relatedPost => { %>
+                <a href="/posts/<%= relatedPost.id %>/details" class="list-group-item list-group-item-action px-0">
+                  <div class="row g-0">
+                    <div class="col-3">
+                      <% if(relatedPost.representative_image) { %>
+                        <img 
+                          src="/img/posts/<%= relatedPost.representative_image %>" 
+                          class="img-fluid rounded" 
+                          alt="<%= relatedPost.title %>"
+                          style="width: 100%; height: 60px; object-fit: cover;"
+                        >
+                      <% } else { %>
+                        <div class="bg-light d-flex justify-content-center align-items-center rounded" style="height: 60px;">
+                          <i class="fa-regular fa-image text-muted"></i>
+                        </div>
+                      <% } %>
+                    </div>
+                    <div class="col-9 ps-3">
+                      <h6 class="mb-1 text-truncate"><%= relatedPost.title %></h6>
+                      <small class="text-muted">
+                        <i class="fa-regular fa-calendar me-1"></i>
+                        <%= new Date(relatedPost.publish_date || relatedPost.created_at).toLocaleDateString('vi-VN') %>
+                      </small>
+                    </div>
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="text-muted mb-0">Không có bài viết liên quan</p>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- Categories -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Danh mục</h5>
+        </div>
+        <div class="card-body">
+          <% if(typeof categories !== 'undefined' && categories.length > 0) { %>
+            <div class="list-group list-group-flush">
+              <% categories.forEach(category => { %>
+                <a href="/posts?category=<%= category.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  <%= category.name %>
+                  <% if(category.postCount) { %>
+                    <span class="badge bg-primary rounded-pill"><%= category.postCount %></span>
+                  <% } %>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="text-muted mb-0">Không có danh mục nào</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

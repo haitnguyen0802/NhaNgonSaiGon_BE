@@ -10,7 +10,6 @@ const Category = sequelize.define('Category', {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
     validate: {
       notEmpty: true
     }
@@ -19,8 +18,7 @@ const Category = sequelize.define('Category', {
     type: DataTypes.TEXT
   },
   slug: {
-    type: DataTypes.STRING,
-    unique: true
+    type: DataTypes.STRING
   },
   image: {
     type: DataTypes.STRING
@@ -64,9 +62,5 @@ const Category = sequelize.define('Category', {
     }
   }
 });
-
-// Self-referencing relationship for parent-child categories
-Category.belongsTo(Category, { as: 'parent', foreignKey: 'parent_id' });
-Category.hasMany(Category, { as: 'children', foreignKey: 'parent_id' });
 
 module.exports = Category; 

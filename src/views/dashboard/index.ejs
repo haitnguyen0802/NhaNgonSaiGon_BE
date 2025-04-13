@@ -138,11 +138,11 @@
                                                 <% discountProducts.forEach(product => { %>
                                                 <tr>
                                                     <td>
-                                                        <img src="<%= product.main_image || '/img/no-image.jpg' %>" alt="<%= product.name %>" class="product-image" width="50" height="50">
+                                                        <img src="<%= product.representative_image || '/img/no-image.jpg' %>" alt="<%= product.title %>" class="product-image" width="50" height="50">
                                                     </td>
-                                                    <td><%= product.name %></td>
-                                                    <td><%= product.price.toLocaleString('vi-VN') %> ₫</td>
-                                                    <td><%= product.discount_price.toLocaleString('vi-VN') %> ₫</td>
+                                                    <td><%= product.title %></td>
+                                                    <td><%= product.price ? product.price.toLocaleString('vi-VN') : '0' %> ₫</td>
+                                                    <td><%= product.discount_price ? product.discount_price.toLocaleString('vi-VN') : (product.price ? product.price.toLocaleString('vi-VN') : '0') %> ₫</td>
                                                 </tr>
                                                 <% }); %>
                                             </tbody>
@@ -174,11 +174,11 @@
                                                 <% flashSaleProducts.forEach(product => { %>
                                                 <tr>
                                                     <td>
-                                                        <img src="<%= product.main_image || '/img/no-image.jpg' %>" alt="<%= product.name %>" class="product-image" width="50" height="50">
+                                                        <img src="<%= product.representative_image || '/img/no-image.jpg' %>" alt="<%= product.title %>" class="product-image" width="50" height="50">
                                                     </td>
-                                                    <td><%= product.name %></td>
-                                                    <td><%= product.price.toLocaleString('vi-VN') %> ₫</td>
-                                                    <td><%= product.discount_price.toLocaleString('vi-VN') %> ₫</td>
+                                                    <td><%= product.title %></td>
+                                                    <td><%= product.price ? product.price.toLocaleString('vi-VN') : '0' %> ₫</td>
+                                                    <td><%= product.discount_price ? product.discount_price.toLocaleString('vi-VN') : (product.price ? product.price.toLocaleString('vi-VN') : '0') %> ₫</td>
                                                 </tr>
                                                 <% }); %>
                                             </tbody>

@@ -1,20 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/categoryController');
-const authMiddleware = require('../middlewares/authMiddleware');
+const { isAuth, isAdmin } = require('../middleware/authMiddleware');
 const uploadMiddleware = require('../middlewares/uploadMiddleware');
 const { Category } = require('../models/index');
 const { Op } = require('sequelize');
 
+// ==================== Admin Routes (Protected) ====================
+// Trang danh sách quản lý danh mục
+router.get('/', isAuth, isAdmin, categoryController.getAllCategoriesAdmin);
+
+// Trang tạo danh mục mới
+router.get('/new', isAuth, isAdmin, categoryController.getNewCategoryForm);
+router.post('/new', isAuth, isAdmin, categoryController.createCategory);
+
+// Trang chỉnh sửa danh mục
+router.get('/:id/edit', isAuth, isAdmin, categoryController.getEditCategoryForm);
+router.post('/:id/edit', isAuth, isAdmin, categoryController.updateCategory);
+
+// Xóa danh mục
+router.post('/:id/delete', isAuth, isAdmin, categoryController.deleteCategory);
+
+// ==================== Public API Routes ====================
+// Lấy tất cả danh mục
+router.get('/api', categoryController.getAllCategories);
+
+// Lấy danh mục theo slug
+router.get('/api/:slug', categoryController.getCategoryBySlug);
+
 // API công khai
-router.get('/', categoryController.getAllCategories);
 router.get('/tree', categoryController.getCategoryTree);
 router.get('/:id', categoryController.getCategoryById);
-router.get('/slug/:slug', categoryController.getCategoryBySlug);
 
 // Các route cần xác thực
-router.use(authMiddleware.protect);
-router.use(authMiddleware.restrictTo('admin'));
+router.use(isAuth);
+router.use(isAdmin);
 
 // Tạo danh mục mới
 router.post('/', 

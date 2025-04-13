@@ -1,0 +1,4 @@
+/* Custome Categories Layout */
+.--mainCategory {
+  flex: 1 !important;
+}

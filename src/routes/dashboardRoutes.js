@@ -28,6 +28,14 @@ router.get('/', async (req, res) => {
       order: [['updated_at', 'DESC']]
     });
 
+    // Add a virtual discount_price field (80% of original price) for demo purposes
+    discountProducts.forEach(product => {
+      if (product.price) {
+        // Add a 20% discount
+        product.discount_price = product.price * 0.8;
+      }
+    });
+
     // Get some flash sale products for display
     const flashSaleProducts = await Product.findAll({
       where: { 
@@ -40,6 +48,14 @@ router.get('/', async (req, res) => {
         { model: Collaborator, as: 'collaborator' }
       ],
       order: [['updated_at', 'DESC']]
+    });
+
+    // Add a virtual discount_price field (50% of original price) for demo purposes
+    flashSaleProducts.forEach(product => {
+      if (product.price) {
+        // Add a 50% discount
+        product.discount_price = product.price * 0.5;
+      }
     });
 
     res.render('dashboard/index', {
