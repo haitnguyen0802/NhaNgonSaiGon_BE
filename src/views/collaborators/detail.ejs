@@ -1,0 +1,123 @@
+<!-- Collaborator Detail Page -->
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Chi tiết cộng tác viên</h1>
+        <div>
+            <a href="/collaborators/<%= collaborator.id %>/edit" class="btn btn-primary btn-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> Chỉnh sửa
+            </a>
+            <a href="/collaborators" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Collaborator Info Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Thông tin cộng tác viên</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 text-center mb-4">
+                    <img src="<%= collaborator.avatar || '/img/default-avatar.png' %>" alt="<%= collaborator.name %>" class="img-profile rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    
+                    <h5 class="font-weight-bold"><%= collaborator.name %></h5>
+                    <p class="badge bg-<%= collaborator.is_active ? 'success' : 'secondary' %> mb-3">
+                        <%= collaborator.is_active ? 'Hoạt động' : 'Không hoạt động' %>
+                    </p>
+                </div>
+                
+                <div class="col-md-9">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <tr>
+                                <th style="width: 200px;">Họ và tên</th>
+                                <td><%= collaborator.name %></td>
+                            </tr>
+                            <tr>
+                                <th>Số điện thoại</th>
+                                <td><%= collaborator.phone || 'Chưa cập nhật' %></td>
+                            </tr>
+                            <tr>
+                                <th>Số sản phẩm</th>
+                                <td><%= productCount %></td>
+                            </tr>
+                            <tr>
+                                <th>Ngày tham gia</th>
+                                <td><%= new Date(collaborator.created_at).toLocaleDateString('vi-VN') %></td>
+                            </tr>
+                            <tr>
+                                <th>Cập nhật gần nhất</th>
+                                <td><%= new Date(collaborator.updated_at).toLocaleDateString('vi-VN') %></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products by Collaborator -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Sản phẩm của cộng tác viên</h6>
+            <a href="/products?collaborator=<%= collaborator.id %>" class="btn btn-sm btn-primary">Xem tất cả</a>
+        </div>
+        <div class="card-body">
+            <% if (collaborator.products && collaborator.products.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Hình ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Vị trí</th>
+                                <th>Giá</th>
+                                <th>Trạng thái</th>
+                                <th>Cập nhật</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% collaborator.products.forEach(product => { %>
+                                <tr>
+                                    <td class="text-center">
+                                        <img src="<%= product.representative_image || '/img/no-image.jpg' %>" alt="<%= product.title %>" class="product-image" style="width: 60px; height: 60px;">
+                                    </td>
+                                    <td><%= product.title %></td>
+                                    <td><%= product.location || 'N/A' %></td>
+                                    <td><%= product.price ? product.price.toLocaleString('vi-VN') + ' ₫' : 'N/A' %></td>
+                                    <td>
+                                        <span class="badge bg-<%= 
+                                            product.status === 'available' ? 'success' : 
+                                            product.status === 'sold' ? 'secondary' : 
+                                            product.status === 'discounted' ? 'warning' : 'danger' 
+                                        %>">
+                                            <%= 
+                                                product.status === 'available' ? 'Sẵn có' : 
+                                                product.status === 'sold' ? 'Đã bán' : 
+                                                product.status === 'discounted' ? 'Giảm giá' : 'Hết hàng' 
+                                            %>
+                                        </span>
+                                    </td>
+                                    <td><%= new Date(product.updated_at).toLocaleDateString('vi-VN') %></td>
+                                    <td>
+                                        <a href="/products/<%= product.id %>" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="alert alert-info">
+                    Cộng tác viên chưa có sản phẩm nào.
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div> 

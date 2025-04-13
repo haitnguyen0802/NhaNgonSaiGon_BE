@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | Nhà Ngon Sài Gòn</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    <% if (typeof extraCSS !== 'undefined') { %>
+        <%- extraCSS %>
+    <% } %>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark text-white">
+            <div class="sidebar-header p-3">
+                <h3>Nhà Ngon Sài Gòn</h3>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li class="<%= active === 'dashboard' ? 'active' : '' %>">
+                    <a href="/dashboard" class="nav-link text-white">
+                        <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
+                    </a>
+                </li>
+                <li class="<%= active === 'posts' ? 'active' : '' %>">
+                    <a href="/posts" class="nav-link text-white">
+                        <i class="fas fa-newspaper me-2"></i> Quản lý tin đăng
+                    </a>
+                </li>
+                <li class="<%= active === 'products' ? 'active' : '' %>">
+                    <a href="/products" class="nav-link text-white">
+                        <i class="fas fa-box me-2"></i> Quản lý sản phẩm
+                    </a>
+                </li>
+                <li class="<%= active === 'categories' ? 'active' : '' %>">
+                    <a href="/categories" class="nav-link text-white">
+                        <i class="fas fa-tags me-2"></i> Danh mục
+                    </a>
+                </li>
+                <li class="<%= active === 'collaborators' ? 'active' : '' %>">
+                    <a href="/collaborators" class="nav-link text-white">
+                        <i class="fas fa-users me-2"></i> Cộng tác viên
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content" class="w-100">
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <div class="d-flex ms-auto">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <img src="<%= user.avatar || '/img/default-avatar.png' %>" class="avatar rounded-circle" width="32" height="32">
+                                <span class="ms-2"><%= user.name %></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/profile">Hồ sơ</a></li>
+                                <li><a class="dropdown-item" href="/settings">Cài đặt</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="container-fluid">
+                <% if (typeof flashMessage !== 'undefined' && flashMessage.message) { %>
+                    <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
+                        <%= flashMessage.message %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+                
+                <!-- Categories Page -->
+                <div class="container-fluid">
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Quản lý danh mục</h1>
+                        <a href="/categories/create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                            <i class="fas fa-plus fa-sm text-white-50"></i> Thêm danh mục mới
+                        </a>
+                    </div>
+
+                    <!-- Categories Table -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">Danh sách danh mục</h6>
+                            <div>
+                                <span>Hiển thị <%= categories.length %> / <%= totalCategories %> danh mục</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Hình ảnh</th>
+                                            <th>Tên danh mục</th>
+                                            <th>Mô tả</th>
+                                            <th>Danh mục cha</th>
+                                            <th>Slug</th>
+                                            <th>Thứ tự</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% categories.forEach(category => { %>
+                                            <tr>
+                                                <td class="text-center">
+                                                    <img src="<%= category.image || '/img/no-image.jpg' %>" alt="<%= category.name %>" class="product-image" style="width: 60px; height: 60px;">
+                                                </td>
+                                                <td><%= category.name %></td>
+                                                <td><%= category.description || 'Không có mô tả' %></td>
+                                                <td>
+                                                    <% if (category.parentCategory) { %>
+                                                        <% if (typeof category.parentCategory === 'object') { %>
+                                                            <%= category.parentCategory.name %>
+                                                        <% } else { %>
+                                                            <%= parentCategories.find(c => c.id.toString() === category.parentCategory.toString())?.name || 'N/A' %>
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        Không có
+                                                    <% } %>
+                                                </td>
+                                                <td><%= category.slug %></td>
+                                                <td><%= category.order || 0 %></td>
+                                                <td>
+                                                    <span class="badge bg-<%= category.isActive ? 'success' : 'secondary' %>">
+                                                        <%= category.isActive ? 'Hoạt động' : 'Ẩn' %>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="/categories/<%= category.id %>/edit" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Sửa">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-warning btn-sm <%= category.isActive ? '' : 'disabled' %>" 
+                                                                onclick="toggleCategoryStatus('<%= category.id %>', false)" 
+                                                                data-bs-toggle="tooltip" title="Ẩn danh mục">
+                                                            <i class="fas fa-eye-slash"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-success btn-sm <%= category.isActive ? 'disabled' : '' %>" 
+                                                                onclick="toggleCategoryStatus('<%= category.id %>', true)" 
+                                                                data-bs-toggle="tooltip" title="Hiện danh mục">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<%= category.id %>" title="Xóa">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <!-- Delete Modal -->
+                                                    <div class="modal fade" id="deleteModal<%= category.id %>" tabindex="-1" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Xác nhận xóa</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p>Bạn có chắc chắn muốn xóa danh mục "<%= category.name %>"?</p>
+                                                                    <% if (category.hasProducts) { %>
+                                                                        <div class="alert alert-warning">
+                                                                            <i class="fas fa-exclamation-triangle"></i> Danh mục này đang chứa sản phẩm. Nếu xóa, tất cả sản phẩm sẽ mất danh mục.
+                                                                        </div>
+                                                                    <% } %>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                                    <form action="/categories/<%= category.id %>?_method=DELETE" method="POST" style="display: inline;">
+                                                                        <button type="submit" class="btn btn-danger">Xóa</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                        
+                                        <% if (categories.length === 0) { %>
+                                            <tr>
+                                                <td colspan="8" class="text-center">Không có danh mục nào.</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <% if (totalPages > 1) { %>
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/categories?page=<%= currentPage - 1 %><%= queryString %>" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        
+                                        <% for (let i = 1; i <= totalPages; i++) { %>
+                                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                <a class="page-link" href="/categories?page=<%= i %><%= queryString %>"><%= i %></a>
+                                            </li>
+                                        <% } %>
+                                        
+                                        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/categories?page=<%= currentPage + 1 %><%= queryString %>" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/main.js"></script>
+    <% if (typeof extraJS !== 'undefined') { %>
+        <%- extraJS %>
+    <% } %>
+
+    <!-- JavaScript for Category Status Toggle -->
+    <script>
+        function toggleCategoryStatus(id, isActive) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/categories/${id}/toggle-status`;
+            
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'PATCH';
+            
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'isActive';
+            statusInput.value = isActive;
+            
+            form.appendChild(methodInput);
+            form.appendChild(statusInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,28 @@
+<!-- Error Page -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">Lỗi hệ thống</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle mr-2"></i> <%= message %></h5>
+                        <% if (error && error.stack) { %>
+                            <div class="mt-3">
+                                <pre><%= error.stack %></pre>
+                            </div>
+                        <% } %>
+                    </div>
+                    <a href="javascript:history.back()" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                    </a>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home mr-1"></i> Trang chủ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
