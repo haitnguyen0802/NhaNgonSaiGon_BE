@@ -21,6 +21,11 @@ const Collaborator = sequelize.define('Collaborator', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
     field: 'total_products'
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'inactive'),
+    defaultValue: 'active',
+    allowNull: false
   }
 }, {
   tableName: 'collaborators',

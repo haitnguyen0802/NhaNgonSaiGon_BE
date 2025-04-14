@@ -4,10 +4,14 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Chi tiết cộng tác viên</h1>
         <div>
-            <a href="/collaborators/<%= collaborator.id %>/edit" class="btn btn-primary btn-sm">
-                <i class="fas fa-edit fa-sm text-white-50"></i> Chỉnh sửa
-            </a>
-            <a href="/collaborators" class="btn btn-secondary btn-sm">
+            <button type="button"
+                class="btn btn-<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'warning' : 'success' %> btn-sm toggle-status"
+                data-id="<%= collaborator.id %>"
+                data-status="<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 0 : 1 %>">
+                <i class="fas <%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'fa-ban' : 'fa-check' %> fa-sm text-white-50"></i>
+                <%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'Vô hiệu hóa' : 'Kích hoạt' %>
+            </button>
+            <a href="/collaborators/<%= collaborator.id %>" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
             </a>
         </div>
@@ -21,36 +25,58 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3 text-center mb-4">
-                    <img src="<%= collaborator.avatar || '/img/default-avatar.png' %>" alt="<%= collaborator.name %>" class="img-profile rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                    
-                    <h5 class="font-weight-bold"><%= collaborator.name %></h5>
-                    <p class="badge bg-<%= collaborator.is_active ? 'success' : 'secondary' %> mb-3">
-                        <%= collaborator.is_active ? 'Hoạt động' : 'Không hoạt động' %>
+                    <img src="<%= collaborator.avatar || '/img/default-avatar.png' %>" alt="<%= collaborator.name %>"
+                        class="img-profile rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+
+                    <h5 class="font-weight-bold">
+                        <%= collaborator.name %>
+                    </h5>
+                    <p class="badge bg-<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'success' : 'secondary' %> mb-3">
+                        <%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'Hoạt động' : 'Không hoạt động' %>
                     </p>
                 </div>
-                
+
                 <div class="col-md-9">
                     <div class="table-responsive">
                         <table class="table table-bordered" width="100%" cellspacing="0">
                             <tr>
                                 <th style="width: 200px;">Họ và tên</th>
-                                <td><%= collaborator.name %></td>
+                                <td>
+                                    <%= collaborator.name %>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Số điện thoại</th>
-                                <td><%= collaborator.phone || 'Chưa cập nhật' %></td>
+                                <td>
+                                    <%= collaborator.phone || 'Chưa cập nhật' %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Trạng thái</th>
+                                <td>
+                                    <span
+                                        class="badge bg-<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'success' : 'secondary' %>">
+                                        <%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'Hoạt động' : 'Không hoạt động' %>
+                                    </span>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Số sản phẩm</th>
-                                <td><%= productCount %></td>
+                                <td>
+                                    <%= productCount %>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Ngày tham gia</th>
-                                <td><%= new Date(collaborator.created_at).toLocaleDateString('vi-VN') %></td>
+                                <td>
+                                    <%= new Date(collaborator.created_at).toLocaleDateString('vi-VN') %>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Cập nhật gần nhất</th>
-                                <td><%= new Date(collaborator.updated_at).toLocaleDateString('vi-VN') %></td>
+                                <td>
+                                    <%= new Date(collaborator.updated_at).toLocaleDateString('vi-VN') %>
+                                </td>
                             </tr>
                         </table>
                     </div>
@@ -66,7 +92,7 @@
             <a href="/products?collaborator=<%= collaborator.id %>" class="btn btn-sm btn-primary">Xem tất cả</a>
         </div>
         <div class="card-body">
-            <% if (collaborator.products && collaborator.products.length > 0) { %>
+            <% if (collaborator.products && collaborator.products.length> 0) { %>
                 <div class="table-responsive">
                     <table class="table table-bordered" width="100%" cellspacing="0">
                         <thead>
@@ -81,43 +107,112 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% collaborator.products.forEach(product => { %>
+                            <% collaborator.products.forEach(product=> { %>
                                 <tr>
                                     <td class="text-center">
-                                        <img src="<%= product.representative_image || '/img/no-image.jpg' %>" alt="<%= product.title %>" class="product-image" style="width: 60px; height: 60px;">
+                                        <img src="<%= product.representative_image || '/img/no-image.jpg' %>"
+                                            alt="<%= product.title %>" class="product-image"
+                                            style="width: 60px; height: 60px;">
                                     </td>
-                                    <td><%= product.title %></td>
-                                    <td><%= product.location || 'N/A' %></td>
-                                    <td><%= product.price ? product.price.toLocaleString('vi-VN') + ' ₫' : 'N/A' %></td>
+                                    <td>
+                                        <%= product.title %>
+                                    </td>
+                                    <td>
+                                        <%= product.location || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <%= product.price ? product.price.toLocaleString('vi-VN') + ' ₫' : 'N/A' %>
+                                    </td>
                                     <td>
                                         <span class="badge bg-<%= 
                                             product.status === 'available' ? 'success' : 
                                             product.status === 'sold' ? 'secondary' : 
                                             product.status === 'discounted' ? 'warning' : 'danger' 
                                         %>">
-                                            <%= 
-                                                product.status === 'available' ? 'Sẵn có' : 
-                                                product.status === 'sold' ? 'Đã bán' : 
-                                                product.status === 'discounted' ? 'Giảm giá' : 'Hết hàng' 
-                                            %>
+                                            <%= product.status==='available' ? 'Sẵn có' : product.status==='sold'
+                                                ? 'Đã bán' : product.status==='discounted' ? 'Giảm giá' : 'Hết hàng' %>
                                         </span>
                                     </td>
-                                    <td><%= new Date(product.updated_at).toLocaleDateString('vi-VN') %></td>
                                     <td>
-                                        <a href="/products/<%= product.id %>" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                        <%= new Date(product.updated_at).toLocaleDateString('vi-VN') %>
+                                    </td>
+                                    <td>
+                                        <a href="/products/<%= product.id %>" class="btn btn-info btn-sm"
+                                            data-bs-toggle="tooltip" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
                                 </tr>
-                            <% }); %>
+                                <% }); %>
                         </tbody>
                     </table>
                 </div>
-            <% } else { %>
-                <div class="alert alert-info">
-                    Cộng tác viên chưa có sản phẩm nào.
-                </div>
-            <% } %>
+                <% } else { %>
+                    <div class="alert alert-info">
+                        Cộng tác viên chưa có sản phẩm nào.
+                    </div>
+                    <% } %>
         </div>
     </div>
-</div> 
+</div>
+
+<!-- JavaScript for Collaborator Status Toggle -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all toggle-status buttons
+        document.querySelectorAll('.toggle-status').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const status = this.getAttribute('data-status');
+                console.log('Button clicked for collaborator ID:', id, 'New status:', status);
+                toggleCollaboratorStatus(id, status);
+            });
+        });
+
+        // Function to toggle collaborator status
+        function toggleCollaboratorStatus(id, status) {
+            if (confirm('Bạn có chắc chắn muốn thay đổi trạng thái của cộng tác viên này?')) {
+                console.log('Sending fetch request to:', `/collaborators/toggle-status/${id}`);
+                console.log('Request body:', { status: status });
+                
+                fetch(`/collaborators/toggle-status/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ status: status })
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    // Check if the response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        console.error('Received non-JSON response:', contentType);
+                        return response.text().then(text => {
+                            console.error('Response text:', text);
+                            throw new Error('Received non-JSON response');
+                        });
+                    }
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    if (data.success) {
+                        // Reload the page to show updated status
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error details:', error);
+                    alert('Có lỗi xảy ra khi thực hiện thao tác này.');
+                });
+            }
+        }
+    });
+</script>

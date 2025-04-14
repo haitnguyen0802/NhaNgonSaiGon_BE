@@ -32,7 +32,7 @@
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">Quản lý cộng tác viên</h1>
-                        <a href="/collaborators/create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                        <a href="/collaborators/new" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                             <i class="fas fa-plus fa-sm text-white-50"></i> Thêm cộng tác viên
                         </a>
                     </div>
@@ -101,8 +101,8 @@
                                                 <td><%= collaborator.productCount || 0 %></td>
                                                 <td><%= collaborator.address || 'N/A' %></td>
                                                 <td>
-                                                    <span class="badge bg-<%= collaborator.is_active ? 'success' : 'secondary' %>">
-                                                        <%= collaborator.is_active ? 'Hoạt động' : 'Không hoạt động' %>
+                                                    <span class="badge bg-<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'success' : 'secondary' %>">
+                                                        <%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'Hoạt động' : 'Không hoạt động' %>
                                                     </span>
                                                 </td>
                                                 <td>
@@ -113,10 +113,11 @@
                                                         <a href="/collaborators/<%= collaborator.id %>/edit" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Sửa">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        <button type="button" class="btn btn-<%= collaborator.is_active ? 'warning' : 'success' %> btn-sm" 
-                                                                onclick="toggleCollaboratorStatus('<%= collaborator.id %>', '<%= !collaborator.is_active %>')" 
-                                                                data-bs-toggle="tooltip" title="<%= collaborator.is_active ? 'Vô hiệu hóa' : 'Kích hoạt' %>">
-                                                            <i class="fas <%= collaborator.is_active ? 'fa-ban' : 'fa-check' %>"></i>
+                                                        <button type="button" class="btn btn-<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'warning' : 'success' %> btn-sm toggle-status" 
+                                                                data-id="<%= collaborator.id %>" 
+                                                                data-status="<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 0 : 1 %>"
+                                                                data-bs-toggle="tooltip" title="<%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'Vô hiệu hóa' : 'Kích hoạt' %>">
+                                                            <i class="fas <%= collaborator.status === 1 || collaborator.status === '1' || collaborator.status === 'active' ? 'fa-ban' : 'fa-check' %>"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<%= collaborator.id %>" title="Xóa">
                                                             <i class="fas fa-trash"></i>
@@ -141,7 +142,8 @@
                                                                 </div>
                                                                 <div class="modal-footer">
                                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                                                    <form action="/collaborators/<%= collaborator.id %>?_method=DELETE" method="POST" style="display: inline;">
+                                                                    <form action="/collaborators/<%= collaborator.id %>" method="POST" style="display: inline;">
+                                                                        <input type="hidden" name="_method" value="DELETE">
                                                                         <button type="submit" class="btn btn-danger">Xóa</button>
                                                                     </form>
                                                                 </div>
@@ -204,27 +206,85 @@
 
     <!-- JavaScript for Collaborator Status Toggle -->
     <script>
-        function toggleCollaboratorStatus(id, isActiveStr) {
-            const isActive = isActiveStr === 'true';
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/collaborators/${id}/toggle-status`;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("=================== COLLABORATORS MODULE DEBUG INFO ===================");
+            console.log("Page information:", {
+                title: '<%= title %>',
+                totalCollaborators: <%= totalCollaborators %>,
+                currentPage: <%= currentPage %>,
+                totalPages: <%= totalPages %>
+            });
             
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'PATCH';
+            // Debug: Load all collaborators
+            console.log('Loading all collaborators via API...');
+            fetch('/collaborators/api/all')
+                .then(response => {
+                    console.log('API response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('All collaborators data from API:', data);
+                })
+                .catch(error => {
+                    console.error('Error loading collaborators from API:', error);
+                });
             
-            const statusInput = document.createElement('input');
-            statusInput.type = 'hidden';
-            statusInput.name = 'is_active';
-            statusInput.value = isActive;
-            
-            form.appendChild(methodInput);
-            form.appendChild(statusInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
+            // Add event listeners to all toggle-status buttons
+            document.querySelectorAll('.toggle-status').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const status = this.getAttribute('data-status');
+                    console.log('Button clicked for collaborator ID:', id, 'New status:', status);
+                    toggleCollaboratorStatus(id, status);
+                });
+            });
+
+            // Function to toggle collaborator status
+            function toggleCollaboratorStatus(id, status) {
+                if (confirm('Bạn có chắc chắn muốn thay đổi trạng thái của cộng tác viên này?')) {
+                    console.log('Sending fetch request to:', `/collaborators/toggle-status/${id}`);
+                    console.log('Request body:', { status: status });
+                    
+                    fetch(`/collaborators/toggle-status/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ status: status })
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', response.headers);
+                        
+                        // Check if the response is JSON
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        } else {
+                            console.error('Received non-JSON response:', contentType);
+                            return response.text().then(text => {
+                                console.error('Response text:', text);
+                                throw new Error('Received non-JSON response');
+                            });
+                        }
+                    })
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Reload the page to show updated status
+                            window.location.reload();
+                        } else {
+                            alert('Có lỗi xảy ra: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error details:', error);
+                        alert('Có lỗi xảy ra khi thực hiện thao tác này.');
+                    });
+                }
+            }
+        });
     </script>
 </body>
 </html> 
