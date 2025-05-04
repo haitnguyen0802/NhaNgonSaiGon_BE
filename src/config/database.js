@@ -38,6 +38,19 @@ const connectDB = async () => {
     console.log('Kết nối model thành công');
   } catch (error) {
     console.error('Không thể kết nối với cơ sở dữ liệu:', error);
+    
+    if (error.name === 'SequelizeHostNotFoundError') {
+      console.error('⚠️ Không tìm thấy host. Vui lòng kiểm tra lại DB_HOST trong file .env');
+    } 
+    else if (error.name === 'SequelizeAccessDeniedError') {
+      if (isRunningOnLocalMachine && !isRunningOnCPanel) {
+        console.error('⚠️ Quyền truy cập bị từ chối. Bạn đang cố gắng kết nối từ xa.');
+        console.error('Vui lòng đọc file REMOTE_CONNECTION_GUIDE.md để biết cách kết nối');
+      } else {
+        console.error('⚠️ Quyền truy cập bị từ chối. Vui lòng kiểm tra tên người dùng và mật khẩu');
+      }
+    }
+    
     process.exit(1);
   }
 };
