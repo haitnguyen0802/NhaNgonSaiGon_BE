@@ -5,13 +5,13 @@ const AppError = require('../utils/errorHandler');
 // Định nghĩa nơi lưu trữ và tên file
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    let uploadPath = path.join(__dirname, '../public/uploads');
+    let uploadPath = path.join(__dirname, '../../public/uploads');
     
     // Determine specific folder based on usage
     if (file.fieldname === 'image' && req.baseUrl.includes('/posts')) {
-      uploadPath = path.join(__dirname, '../public/img/posts');
+      uploadPath = path.join(__dirname, '../../public/img/posts');
     } else if (file.fieldname.includes('Image') || file.fieldname.includes('images')) {
-      uploadPath = path.join(__dirname, '../public/img/products');
+      uploadPath = path.join(__dirname, '../../public/img/products');
     }
     
     cb(null, uploadPath);

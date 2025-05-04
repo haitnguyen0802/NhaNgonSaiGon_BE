@@ -106,3 +106,22 @@ public
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Ignore all files in the uploads directory
+uploads/*
+*.bat
+*.md
+*.txt
+*.log
+*.log.*
+*.log.*.*
+*.log.*.*.*
+*.log.*.*.*.*
+*.htaccess
+*.htaccess.*
+*.htaccess.*.*
+*.htaccess.*.*.*
+*.htaccess.*.*.*.*
+*.htaccess.*.*.*.*.*
+*.htaccess.*.*.*.*.*.*
+*.env.*

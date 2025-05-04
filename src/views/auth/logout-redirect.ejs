@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <p>Đang đăng xuất, vui lòng đợi...</p>
+    </div>
+
+    <script>
+        // Xóa dữ liệu từ sessionStorage
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('isAuthenticated');
+        sessionStorage.clear(); // Xóa tất cả dữ liệu
+        
+        // Xóa tất cả cookie (không cần thiết vì session đã bị xóa ở server)
+        // Nhưng đây là cách để xóa cookie bằng JavaScript nếu cần
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        // Chuyển hướng đến trang đăng nhập sau 1 giây
+        setTimeout(() => {
+            window.location.href = '<%= redirectUrl %>';
+        }, 1000);
+    </script>
+</body>
+</html> 

@@ -313,7 +313,7 @@ router.post('/:id/toggle-status', async (req, res) => {
       });
     }
     
-    // Convert string values to numeric if needed
+    // Convert string values to enum values
     let statusValue;
     if (newStatus === 'active' || newStatus === '1' || newStatus === 1) {
       statusValue = 1;
@@ -402,6 +402,7 @@ router.get('/api/all', async (req, res) => {
     
     // Get all collaborators with product counts
     const collaborators = await Collaborator.findAll({
+      where: { status: 1 },
       include: [
         { model: Product, as: 'products', required: false }
       ],
@@ -470,7 +471,7 @@ router.post('/toggle-status/:id', async (req, res) => {
       });
     }
     
-    // Convert string values to numeric if needed
+    // Convert string values to enum values
     let statusValue;
     if (newStatus === 'active' || newStatus === '1' || newStatus === 1) {
       statusValue = 1;

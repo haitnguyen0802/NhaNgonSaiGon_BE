@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const slugify = require('../utils/slugify');
 
 const Category = sequelize.define('Category', {
   id: {
@@ -46,18 +47,12 @@ const Category = sequelize.define('Category', {
   hooks: {
     beforeCreate: (category) => {
       if (category.name && !category.slug) {
-        category.slug = category.name
-          .toLowerCase()
-          .replace(/[^\w\sàáạãèéëêìíïîòóöôùúüûñç]/g, '')
-          .replace(/\s+/g, '-');
+        category.slug = slugify(category.name);
       }
     },
     beforeUpdate: (category) => {
       if (category.changed('name') && !category.changed('slug')) {
-        category.slug = category.name
-          .toLowerCase()
-          .replace(/[^\w\sàáạãèéëêìíïîòóöôùúüûñç]/g, '')
-          .replace(/\s+/g, '-');
+        category.slug = slugify(category.name);
       }
     }
   }

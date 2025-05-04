@@ -316,7 +316,7 @@ exports.getAllCategoriesAdmin = catchAsync(async (req, res, next) => {
     const search = req.query.search || '';
     const parentId = req.query.parent || null;
     
-    // Xây dựng điều kiện truy vấn
+    // Build query conditions
     const where = {};
     
     if (search) {
@@ -327,10 +327,10 @@ exports.getAllCategoriesAdmin = catchAsync(async (req, res, next) => {
       where.parent_id = parentId;
     }
     
-    // Tính offset để phân trang
+    // Calculate offset for pagination
     const offset = (page - 1) * limit;
     
-    // Lấy danh sách tất cả danh mục cha cho dropdown filter
+    // Get all parent categories for dropdown filter
     const parentCategories = await Category.findAll({
       where: {
         parent_id: null
@@ -338,7 +338,7 @@ exports.getAllCategoriesAdmin = catchAsync(async (req, res, next) => {
       order: [['name', 'ASC']]
     });
     
-    // Lấy danh sách danh mục theo điều kiện (không dùng group và count)
+    // Get categories based on conditions
     const { count, rows: categories } = await Category.findAndCountAll({
       where,
       include: [
@@ -353,26 +353,56 @@ exports.getAllCategoriesAdmin = catchAsync(async (req, res, next) => {
       limit
     });
     
-    // Lấy số lượng bài viết cho mỗi danh mục riêng lẻ
-    for (const category of categories) {
-      const postCount = await Post.count({
-        where: { category_id: category.id }
-      });
-      category.setDataValue('postCount', postCount);
+    // Convert categories to plain objects to allow adding custom properties
+    const categoriesWithPostCount = [];
+    
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      try {
+        // Check if category.id is a valid number
+        if (isNaN(category.id)) {
+          const categoryData = category.toJSON();
+          categoryData.postCount = 0;
+          categoriesWithPostCount.push(categoryData);
+          continue;
+        }
+        
+        const postCount = await Post.count({
+          where: { 
+            category_id: category.id
+          }
+        });
+        
+        // Convert Sequelize model to plain object and add post count
+        const categoryData = category.toJSON();
+        categoryData.postCount = postCount;
+        categoriesWithPostCount.push(categoryData);
+      } catch (countError) {
+        const categoryData = category.toJSON();
+        categoryData.postCount = 0;
+        categoriesWithPostCount.push(categoryData);
+      }
     }
     
-    // Tính tổng số trang
+    // Calculate total pages
     const totalPages = Math.ceil(count / limit);
+    
+    // Get flash messages from session
+    const successMessage = req.flash('success');
+    const errorMessage = req.flash('error');
     
     res.render('categories/index', {
       title: 'Quản lý danh mục',
-      categories,
+      active: 'categories',
+      categories: categoriesWithPostCount,
       parentCategories,
       page,
       limit,
       totalPages,
       query: req.query,
-      success: req.flash('success')
+      success: successMessage.length > 0 ? successMessage[0] : null,
+      error: errorMessage.length > 0 ? errorMessage[0] : null,
+      errors: [] // Empty array, not null, for consistency
     });
   } catch (error) {
     next(error);
@@ -389,6 +419,7 @@ exports.getNewCategoryForm = catchAsync(async (req, res, next) => {
     
     res.render('categories/new/index', {
       title: 'Thêm danh mục mới',
+      active: 'categories',
       parentCategories,
       success: req.flash('success'),
       errors: req.flash('error')
@@ -432,6 +463,7 @@ exports.getEditCategoryForm = catchAsync(async (req, res, next) => {
     
     res.render('categories/edit/index', {
       title: `Chỉnh sửa danh mục: ${category.name}`,
+      active: 'categories',
       category,
       parentCategories,
       childCategories,

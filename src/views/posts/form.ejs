@@ -12,7 +12,7 @@
       <% if (typeof error !== 'undefined' && error) { %>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
           <i class="fa-solid fa-circle-exclamation me-2"></i><%= error %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <button type="button" class="btn-close" aria-label="Close"></button>
         </div>
       <% } %>
       
@@ -20,7 +20,7 @@
       <% if (typeof success !== 'undefined' && success) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
           <i class="fa-solid fa-check-circle me-2"></i><%= success %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <button type="button" class="btn-close" aria-label="Close"></button>
         </div>
       <% } %>
       
@@ -74,6 +74,32 @@
                 required
               ><%= post ? post.content : '' %></textarea>
               <small class="text-muted">Sử dụng thanh công cụ phía trên để định dạng văn bản.</small>
+            </div>
+            
+            <!-- Category Field -->
+            <div class="mb-4">
+              <label for="category_id" class="form-label">Danh mục</label>
+              <select class="form-select" id="category_id" name="category_id">
+                <option value="">Không có danh mục</option>
+                <% if(typeof categories !== 'undefined') { %>
+                  <% categories.forEach(category => { %>
+                    <option 
+                      value="<%= category.id %>" 
+                      <%= post && post.category_id == category.id ? 'selected' : '' %>
+                    >
+                      <%= category.name %>
+                    </option>
+                  <% }); %>
+                <% } %>
+              </select>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <small class="text-muted">Chọn danh mục phù hợp với nội dung bài viết</small>
+                <small>
+                  <a href="/categories/new" target="_blank" class="text-primary">
+                    <i class="fa-solid fa-plus me-1"></i>Thêm danh mục mới
+                  </a>
+                </small>
+              </div>
             </div>
 
             <!-- Product Association -->
@@ -135,33 +161,6 @@
               </div>
             </div>
 
-            <!-- Category Field -->
-            <div class="card mb-4">
-              <div class="card-header bg-light">
-                <h5 class="mb-0">Danh mục</h5>
-              </div>
-              <div class="card-body">
-                <select class="form-select" id="category_id" name="category_id">
-                  <option value="">Không có danh mục</option>
-                  <% if(typeof categories !== 'undefined') { %>
-                    <% categories.forEach(category => { %>
-                      <option 
-                        value="<%= category.id %>" 
-                        <%= post && post.category_id == category.id ? 'selected' : '' %>
-                      >
-                        <%= category.name %>
-                      </option>
-                    <% }); %>
-                  <% } %>
-                </select>
-                <div class="mt-2">
-                  <a href="/categories/new" target="_blank" class="small text-primary">
-                    <i class="fa-solid fa-plus me-1"></i>Thêm danh mục mới
-                  </a>
-                </div>
-              </div>
-            </div>
-
             <!-- Featured Image -->
             <div class="card mb-4">
               <div class="card-header bg-light">
@@ -182,7 +181,7 @@
                   <div class="current-image mt-3">
                     <p class="small text-muted mb-2">Hình ảnh hiện tại:</p>
                     <img 
-                      src="/img/posts/<%= post.representative_image %>" 
+                      src="<%= baseUrl %>/img/posts/<%= post.representative_image %>" 
                       class="img-thumbnail" 
                       alt="<%= post.title %>"
                     >
@@ -198,37 +197,134 @@
             <!-- Pin Post Option -->
             <div class="card mb-4">
               <div class="card-header bg-light">
-                <h5 class="mb-0">Tùy chọn</h5>
+                <h5 class="mb-0">Tùy chọn ghim</h5>
               </div>
               <div class="card-body">
-                <div class="form-check">
+                <div class="form-check form-switch">
                   <input 
                     class="form-check-input" 
                     type="checkbox" 
+                    role="switch" 
+                    id="is_pinned" 
                     name="is_pinned" 
-                    id="isPinned" 
                     value="true"
                     <%= post && post.is_pinned ? 'checked' : '' %>
                   >
-                  <label class="form-check-label" for="isPinned">
-                    Ghim bài viết lên đầu
-                  </label>
+                  <label class="form-check-label" for="is_pinned">Ghim bài viết này</label>
                 </div>
-                <% if(post && post.is_pinned) { %>
-                  <div class="mt-2 small text-muted">
+                <small class="text-muted d-block mt-2">Bài viết ghim sẽ xuất hiện ở đầu danh sách</small>
+                <% if(post && post.is_pinned && post.pin_date) { %>
+                  <small class="text-muted d-block mt-2">
                     <i class="fa-solid fa-thumbtack me-1"></i>
                     Ghim từ: <%= new Date(post.pin_date).toLocaleDateString('vi-VN') %>
-                  </div>
+                  </small>
                 <% } %>
               </div>
             </div>
 
+            <!-- Author Information -->
+            <div class="card mb-4">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">Thông tin tác giả</h5>
+              </div>
+              <div class="card-body">
+                <% if (locals.user) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <% if (user.avatar) { %>
+                        <img src="<%= user.avatar %>" alt="<%= user.name %>" class="rounded-circle" width="50" height="50">
+                      <% } else { %>
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                          <i class="fa-solid fa-user"></i>
+                        </div>
+                      <% } %>
+                    </div>
+                    <div>
+                      <strong><%= user.name %></strong>
+                      <small class="text-muted d-block"><%= user.email %></small>
+                      <input type="hidden" name="author_id" value="<%= user.id %>">
+                    </div>
+                  </div>
+                <% } else { %>
+                  <p class="text-muted mb-0">Bạn cần đăng nhập để đăng bài</p>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Collaborator Information (if needed) -->
+            <div class="card mb-4">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">Thông tin cộng tác viên</h5>
+              </div>
+              <div class="card-body">
+                <select class="form-select" id="collaborator_id" name="collaborator_id">
+                  <option value="">Không có cộng tác viên</option>
+                  <% if(typeof collaborators !== 'undefined') { %>
+                    <% collaborators.forEach(collaborator => { %>
+                      <option 
+                        value="<%= collaborator.id %>" 
+                        <%= post && post.collaborator_id == collaborator.id ? 'selected' : '' %>
+                      >
+                        <%= collaborator.name %>
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+                <small class="text-muted d-block mt-2">Chọn cộng tác viên liên quan đến bài viết này (nếu có)</small>
+              </div>
+            </div>
+
+            <!-- Meta Information -->
+            <% if(post) { %>
+            <div class="card mb-4">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">Thông tin thêm</h5>
+              </div>
+              <div class="card-body">
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Lượt xem:</span>
+                    <span class="badge bg-secondary rounded-pill"><%= post.view_count || 0 %></span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Ngày tạo:</span>
+                    <span>
+                      <% try { %>
+                        <%= post.created_at ? new Date(post.created_at).toLocaleDateString('vi-VN') : 'Không có dữ liệu' %>
+                      <% } catch(e) { %>
+                        Không có dữ liệu
+                      <% } %>
+                    </span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Cập nhật:</span>
+                    <span>
+                      <% try { %>
+                        <%= post.updated_at ? new Date(post.updated_at).toLocaleDateString('vi-VN') : 'Không có dữ liệu' %>
+                      <% } catch(e) { %>
+                        Không có dữ liệu
+                      <% } %>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <% } %>
+            
+            <!-- Hidden Fields -->
+            <input type="hidden" name="is_deleted" value="false">
+            <% if (!post) { %>
+              <input type="hidden" name="view_count" value="0">
+            <% } %>
+
             <!-- Submit Buttons -->
             <div class="d-grid gap-2">
               <button type="submit" class="btn btn-primary">
-                <i class="fa-solid fa-save me-2"></i><%= post ? 'Cập nhật bài viết' : 'Đăng bài viết' %>
+                <i class="fa-solid fa-save me-1"></i><%= post ? 'Cập nhật bài viết' : 'Đăng bài viết' %>
               </button>
-              <a href="/posts" class="btn btn-outline-secondary">Hủy</a>
+              <a href="/posts" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-times me-1"></i>Hủy
+              </a>
             </div>
           </div>
         </div>
@@ -240,6 +336,23 @@
 <!-- Custom JavaScript for form functionality -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Preview image before upload
+    document.getElementById('image').addEventListener('change', function(e) {
+      const preview = document.getElementById('preview');
+      const previewContainer = document.getElementById('imagePreview');
+      
+      if (e.target.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          previewContainer.classList.remove('d-none');
+        }
+        reader.readAsDataURL(e.target.files[0]);
+      } else {
+        previewContainer.classList.add('d-none');
+      }
+    });
+
     // Basic text formatting function
     window.formatText = function(command) {
       const textarea = document.getElementById('content');
@@ -288,20 +401,42 @@
       textarea.focus();
     };
 
-    // Image preview functionality
-    document.getElementById('image').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) {
-        document.getElementById('imagePreview').classList.add('d-none');
-        return;
-      }
+    // Completely replace Bootstrap's alert dismissal to avoid the error
+    const closeButtons = document.querySelectorAll('.alert .btn-close');
+    closeButtons.forEach(button => {
+      // Remove Bootstrap's data attribute
+      button.removeAttribute('data-bs-dismiss');
       
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        document.getElementById('preview').src = event.target.result;
-        document.getElementById('imagePreview').classList.remove('d-none');
-      };
-      reader.readAsDataURL(file);
+      // Add our custom click handler
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const alert = this.closest('.alert');
+        if (alert) {
+          // Manual fade out and removal
+          alert.classList.remove('show');
+          setTimeout(() => {
+            if (alert.parentNode) {
+              alert.parentNode.removeChild(alert);
+            }
+          }, 150);
+        }
+      });
+    });
+
+    // Auto-dismiss alerts after 5 seconds
+    const autoCloseAlerts = document.querySelectorAll('.alert:not(.alert-persistent)');
+    autoCloseAlerts.forEach(alert => {
+      setTimeout(() => {
+        if (alert && document.body.contains(alert)) {
+          // Manual fade out and removal
+          alert.classList.remove('show');
+          setTimeout(() => {
+            if (alert.parentNode) {
+              alert.parentNode.removeChild(alert);
+            }
+          }, 150);
+        }
+      }, 5000);
     });
   });
 </script> 

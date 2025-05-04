@@ -2,14 +2,14 @@ const express = require("express");
 const router = express.Router();
 const postController = require("../controllers/postController");
 const authMiddleware = require("../middlewares/authMiddleware");
-const uploadMiddleware = require("../middlewares/uploadMiddleware");
+const cloudinaryUpload = require("../middlewares/cloudinaryUploadMiddleware");
 
 // ------ Web View Routes ------
 
 // Public web views - no authentication needed
 router.get("/", postController.getPostsAdmin);
 router.get("/:id/details", postController.getPostDetails);
-router.get("/new", postController.getNewPostForm);
+router.get("/new", postController.getNewPostPage);
 router.get("/:id/edit", postController.getEditPostForm);
 
 // ------ API Routes ------
@@ -21,16 +21,14 @@ router.get("/api/posts/:id", postController.getPostById);
 // Create new post - no authentication needed since user is already logged in
 router.post(
   "/new",
-  uploadMiddleware.uploadPostImage,
-  postController.resizePostImage,
+  cloudinaryUpload.uploadProductImages,
   postController.createPost
 );
 
 // Update post - no authentication needed since user is already logged in
 router.put(
   "/:id",
-  uploadMiddleware.uploadPostImage,
-  postController.resizePostImage,
+  cloudinaryUpload.uploadSingleImage,
   postController.updatePost
 );
 

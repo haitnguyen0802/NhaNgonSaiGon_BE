@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm sản phẩm mới | Nhà Ngôn Sài Gòn</title>
+    <title>Thêm sản phẩm mới | Nhà Ngon Sài Gòn</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -96,6 +96,18 @@
                                     <div class="form-text">Nhập tên sản phẩm rõ ràng để khách hàng dễ tìm kiếm</div>
                                 </div>
                                 
+                                <!-- Product MTS Code -->
+                                <div class="mb-3">
+                                    <label for="product_mts" class="form-label">Mã sản phẩm</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="product_mts" name="product_mts" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" id="generateMtsBtn">
+                                            <i class="fas fa-sync-alt"></i> Tạo mã
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Mã sản phẩm sẽ được tạo tự động, tăng thêm 1 từ mã lớn nhất hiện có</div>
+                                </div>
+                                
                                 <!-- Product Location -->
                                 <div class="mb-3">
                                     <label for="location" class="form-label">Vị trí</label>
@@ -152,9 +164,37 @@
                                     <select class="form-select" id="category" name="category">
                                         <option value="">Chọn danh mục</option>
                                         <% if (locals.categories && categories.length > 0) { %>
-                                            <% categories.forEach(category => { %>
-                                                <option value="<%= category.id %>"><%= category.name %></option>
-                                            <% }); %>
+                                            <% 
+                                                // Tạo map danh mục
+                                                const categoryMap = new Map();
+                                                categories.forEach(cat => categoryMap.set(cat.id, cat));
+                                                
+                                                // Lọc ra danh mục gốc (không có parent_id)
+                                                const rootCategories = categories.filter(cat => !cat.parent_id);
+                                                
+                                                // Hàm lấy tên có indent
+                                                const getCategoryName = (category, level = 0) => {
+                                                    const indent = '&nbsp;'.repeat(level * 4);
+                                                    return `${indent}${level > 0 ? '└ ' : ''}${category.name}`;
+                                                };
+                                                
+                                                // Đệ quy để hiển thị danh mục theo cấu trúc cây
+                                                const renderCategories = (cats, level = 0) => {
+                                                    cats.forEach(category => {
+                                            %>
+                                                <option value="<%= category.id %>"><%- getCategoryName(category, level) %></option>
+                                            <% 
+                                                        // Tìm các danh mục con của danh mục hiện tại
+                                                        const childCategories = categories.filter(cat => cat.parent_id === category.id);
+                                                        if (childCategories.length > 0) {
+                                                            renderCategories(childCategories, level + 1);
+                                                        }
+                                                    });
+                                                };
+                                                
+                                                // Hiển thị danh mục
+                                                renderCategories(rootCategories);
+                                            %>
                                         <% } %>
                                     </select>
                                 </div>
@@ -198,57 +238,155 @@
         // Image preview functionality
         document.getElementById('images').addEventListener('change', function(event) {
             const previewContainer = document.getElementById('imagePreview');
-            previewContainer.innerHTML = '';
+            previewContainer.innerHTML = ''; // Clear existing previews
             
             const files = event.target.files;
-            if (!files || files.length === 0) return;
             
-            // Display preview of selected images
-            Array.from(files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (!file.type.match('image.*')) continue;
+                    
+                    const reader = new FileReader();
                     const previewItem = document.createElement('div');
                     previewItem.className = 'image-preview-item';
                     
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'preview-image';
-                    img.alt = 'Preview';
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'preview-image';
+                        previewItem.appendChild(img);
+                        
+                        // Add main image indicator for first image
+                        if (i === 0) {
+                            const mainIndicator = document.createElement('div');
+                            mainIndicator.className = 'main-image-indicator';
+                            mainIndicator.textContent = 'Ảnh chính';
+                            previewItem.appendChild(mainIndicator);
+                        }
+                        
+                        // Add remove button
+                        const removeBtn = document.createElement('div');
+                        removeBtn.className = 'remove-image';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        removeBtn.addEventListener('click', function() {
+                            // Remove image from preview
+                            previewItem.remove();
+                            
+                            // Create a new FileList without this file
+                            // Note: We can't directly modify FileList, so we'll need to handle this differently
+                            // This is a placeholder for that logic
+                            console.log('Remove image clicked');
+                        });
+                        previewItem.appendChild(removeBtn);
+                        
+                        previewContainer.appendChild(previewItem);
+                    };
                     
-                    previewItem.appendChild(img);
-                    
-                    // Add indicator for representative image (first image)
-                    if (index === 0) {
-                        const indicator = document.createElement('span');
-                        indicator.className = 'main-image-indicator';
-                        indicator.textContent = 'Chính';
-                        previewItem.appendChild(indicator);
-                    }
-                    
-                    previewContainer.appendChild(previewItem);
-                };
-                reader.readAsDataURL(file);
-            });
-        });
-        
-        // Auto-set status to 'discounted' if discount price is entered
-        document.getElementById('discount_price').addEventListener('input', function(e) {
-            const statusSelect = document.getElementById('status');
-            if (e.target.value && parseFloat(e.target.value) > 0) {
-                statusSelect.value = 'discounted';
-            } else if (statusSelect.value === 'discounted') {
-                statusSelect.value = 'available';
+                    reader.readAsDataURL(file);
+                }
             }
         });
         
-        // Form validation
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            const price = parseFloat(document.getElementById('price').value);
-            const discountPrice = parseFloat(document.getElementById('discount_price').value || 0);
+        // Function to get latest product MTS code
+        async function getLatestProductMtsCode() {
+            try {
+                // Sử dụng session để xác thực thay vì token
+                const response = await fetch('/api/products?limit=1&sort=product_mts:desc');
+                if (!response.ok) {
+                    throw new Error('Không thể lấy mã sản phẩm');
+                }
+                
+                const data = await response.json();
+                if (data.success && data.data.products && data.data.products.length > 0) {
+                    // Lấy mã lớn nhất và cộng thêm 1
+                    const highestMts = parseInt(data.data.products[0].product_mts) || 0;
+                    return highestMts + 1;
+                } else {
+                    // Nếu không có sản phẩm nào, bắt đầu từ 1
+                    return 1;
+                }
+            } catch (error) {
+                console.error('Error fetching latest MTS code:', error);
+                return 1; // Mặc định bắt đầu từ 1 nếu có lỗi
+            }
+        }
+        
+        // Auto-generate MTS code when the page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const latestMtsCode = await getLatestProductMtsCode();
+                document.getElementById('product_mts').value = latestMtsCode;
+            } catch (error) {
+                console.error('Error setting initial MTS code:', error);
+            }
+        });
+        
+        // Generate new MTS code when button is clicked
+        document.getElementById('generateMtsBtn').addEventListener('click', async function() {
+            try {
+                const latestMtsCode = await getLatestProductMtsCode();
+                document.getElementById('product_mts').value = latestMtsCode;
+            } catch (error) {
+                console.error('Error generating new MTS code:', error);
+                alert('Không thể tạo mã mới: ' + error.message);
+            }
+        });
+        
+        // Validate form before submit
+        document.getElementById('productForm').addEventListener('submit', function(event) {
+            const imagesInput = document.getElementById('images');
+            const titleInput = document.getElementById('title');
+            const priceInput = document.getElementById('price');
+            const productMtsInput = document.getElementById('product_mts');
             
-            if (discountPrice >= price && discountPrice > 0) {
-                e.preventDefault();
-                alert('Giá khuyến mãi phải nhỏ hơn giá gốc!');
+            let isValid = true;
+            
+            // Check if title is provided
+            if (titleInput.value.trim() === '') {
+                alert('Vui lòng nhập tên sản phẩm');
+                titleInput.focus();
+                isValid = false;
+            }
+            
+            // Check if price is provided and valid
+            if (priceInput.value.trim() === '' || parseFloat(priceInput.value) <= 0) {
+                alert('Vui lòng nhập giá hợp lệ cho sản phẩm');
+                priceInput.focus();
+                isValid = false;
+            }
+            
+            // Check if product_mts is provided
+            if (!productMtsInput.value || productMtsInput.value.trim() === '') {
+                alert('Vui lòng tạo mã sản phẩm');
+                productMtsInput.focus();
+                isValid = false;
+            }
+            
+            // Check if images are provided
+            if (imagesInput.files.length === 0) {
+                alert('Vui lòng chọn ít nhất một hình ảnh cho sản phẩm');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+            } else {
+                // Show loading state
+                const submitBtn = event.submitter;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+            }
+        });
+        
+        // Discount price validation
+        document.getElementById('discount_price').addEventListener('change', function() {
+            const priceInput = document.getElementById('price');
+            const discountInput = this;
+            
+            if (parseFloat(discountInput.value) >= parseFloat(priceInput.value)) {
+                alert('Giá khuyến mãi phải nhỏ hơn giá gốc');
+                discountInput.value = '';
             }
         });
     </script>

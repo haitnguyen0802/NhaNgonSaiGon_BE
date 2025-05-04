@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <% if (typeof extraCSS !=='undefined' ) { %>
         <%- extraCSS %>
-    <% } %>
+            <% } %>
 </head>
 
 <body>
@@ -27,10 +27,10 @@
                 <% if (typeof flashMessage !=='undefined' && flashMessage.message) { %>
                     <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
                         <%= flashMessage.message %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                <% } %>
-                
+                    <% } %>
+
                         <!-- Posts Page -->
                         <div class="container-fluid">
                             <!-- Page Heading -->
@@ -117,7 +117,7 @@
                                                         <tr>
                                                             <td class="text-center">
                                                                 <% if(post.representative_image) { %>
-                                                                    <img src="/img/posts/<%= post.representative_image %>"
+                                                                    <img src="<%= post.representative_image %>"
                                                                         alt="<%= post.title %>" class="img-thumbnail"
                                                                         style="width: 80px; height: 60px; object-fit: cover;">
                                                                     <% } else { %>
@@ -322,19 +322,9 @@
                                 </div>
                             </div>
                         </div>
-            </div>
+            </div>  
         </div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Custom JS -->
-    <script src="/js/main.js"></script>
-    <% if (typeof extraJS !=='undefined' ) { %>
-        <%- extraJS %>
-    <% } %>
 </body>
 
-</html> 
+</html>

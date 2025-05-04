@@ -1,4 +1,4 @@
-const { Post, Category, Product, User } = require('../models/index');
+const { Post, Category, Product, User, Collaborator } = require('../models/index');
 const AppError = require('../utils/errorHandler');
 const { Op, Sequelize } = require('sequelize');
 const catchAsync = require('../utils/catchAsync');
@@ -165,11 +165,48 @@ exports.getPostDetails = catchAsync(async (req, res, next) => {
   }
 });
 
-// Hiển thị form tạo bài đăng mới
+// Hiển thị trang đăng tin mới
+exports.getNewPostPage = catchAsync(async (req, res, next) => {
+  try {
+    // Get categories for dropdown
+    const categories = await Category.findAll({
+      where: { is_active: true },
+      order: [['name', 'ASC']]
+    });
+    
+    // Get collaborators for dropdown
+    const collaborators = await Collaborator.findAll({
+      where: { status: 1 },
+      order: [['name', 'ASC']]
+    });
+    
+    // Get products for dropdown with category information
+    const products = await Product.findAll({
+      where: { status: 'active' },
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name'] }
+      ],
+      order: [['title', 'ASC']]
+    });
+    
+    res.render('posts/new/index', {
+      title: 'Thêm tin đăng mới',
+      active: 'posts',
+      categories,
+      products,
+      collaborators
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Hiển thị form tạo bài đăng mới (phiên bản cũ)
 exports.getNewPostForm = catchAsync(async (req, res, next) => {
   try {
-    // Get all categories for dropdown
+    // Get all active categories for dropdown
     const categories = await Category.findAll({
+      where: { is_active: true },
       order: [['name', 'ASC']]
     });
     
@@ -205,22 +242,37 @@ exports.getEditPostForm = catchAsync(async (req, res, next) => {
       return next(new AppError('Bạn không được phép chỉnh sửa bài đăng này', 403));
     }
     
-    // Get all categories for dropdown
+    // Get all active categories for dropdown
     const categories = await Category.findAll({
+      where: { is_active: true },
       order: [['name', 'ASC']]
     });
     
     // Get all products for dropdown
     const products = await Product.findAll({
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name'] }
+      ],
       order: [['title', 'ASC']]
     });
+    
+    // Get all collaborators for dropdown
+    const collaborators = await Collaborator.findAll({
+      where: { status: 1 },
+      order: [['name', 'ASC']]
+    });
+    
+    // Get flash messages if any
+    const errorMessage = req.flash('error');
     
     res.render('posts/form', {
       title: 'Chỉnh sửa bài viết',
       active: 'posts',
       post,
       categories,
-      products
+      products,
+      collaborators,
+      error: errorMessage.length > 0 ? errorMessage[0] : ''
     });
   } catch (error) {
     next(error);
@@ -240,9 +292,13 @@ exports.createPost = catchAsync(async (req, res, next) => {
       req.body.author_id = req.user.id;
     }
     
-    // Add image filename if available
-    if (req.file) {
-      req.body.representative_image = req.file.filename;
+    // Add Cloudinary image URL if available
+    if (req.cloudinaryImages && req.cloudinaryImages.length > 0) {
+      // Lấy URL của hình ảnh đầu tiên làm hình đại diện
+      req.body.representative_image = req.cloudinaryImages[0].url;
+      
+      // Lưu tất cả URL hình ảnh vào một trường để xử lý sau nếu cần
+      req.body.image_urls = req.cloudinaryImages.map(img => img.url).join(',');
     }
 
     // Handle is_pinned checkbox
@@ -262,6 +318,17 @@ exports.createPost = catchAsync(async (req, res, next) => {
       }
     }
     
+    // Handle empty collaborator_id - if it's an empty string, set it to null
+    if (req.body.collaborator_id === '' || req.body.collaborator_id === undefined) {
+      req.body.collaborator_id = null;
+    } else {
+      // Verify the collaborator exists
+      const collaboratorExists = await Collaborator.findByPk(req.body.collaborator_id);
+      if (!collaboratorExists) {
+        req.body.collaborator_id = null; // Set to null if collaborator doesn't exist
+      }
+    }
+    
     // Create post with validated data
     const post = await Post.create(req.body);
 
@@ -271,24 +338,36 @@ exports.createPost = catchAsync(async (req, res, next) => {
   } catch (error) {
     console.error('Error creating post:', error);
     
-    // Get categories and products for form re-rendering
+    // Get all categories for dropdown
     const categories = await Category.findAll({
+      where: { is_active: true },
       order: [['name', 'ASC']]
     });
     
+    // Get all collaborators for dropdown for re-rendering form
+    const collaborators = await Collaborator.findAll({
+      where: { status: 1 },
+      order: [['name', 'ASC']]
+    });
+    
+    // Get all products for dropdown for re-rendering form
     const products = await Product.findAll({
       where: { status: 'available' },
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name'] }
+      ],
       order: [['title', 'ASC']]
     });
     
     // Re-render the form with error message and previously entered data
-    res.render('posts/form', {
-      title: 'Thêm bài viết mới',
+    res.render('posts/new/index', {
+      title: 'Đăng tin mới',
       active: 'posts',
-      post: req.body,
       categories,
+      collaborators,
       products,
-      error: error.message || 'Có lỗi xảy ra khi tạo bài viết'
+      error: error.message || 'Có lỗi xảy ra khi tạo bài viết',
+      formData: req.body
     });
   }
 });
@@ -320,16 +399,9 @@ exports.updatePost = catchAsync(async (req, res, next) => {
       req.body.pin_date = null;
     }
 
-    // Add image filename if available
-    if (req.file) {
-      // Delete old image if exists
-      if (post.representative_image) {
-        const oldImagePath = path.join(__dirname, '../public/img/posts', post.representative_image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-      req.body.representative_image = req.file.filename;
+    // Add Cloudinary image URL if available
+    if (req.cloudinaryImage && req.cloudinaryImage.url) {
+      req.body.representative_image = req.cloudinaryImage.url;
     }
     
     // Handle empty category_id - if it's an empty string, set it to null
@@ -340,6 +412,17 @@ exports.updatePost = catchAsync(async (req, res, next) => {
       const categoryExists = await Category.findByPk(req.body.category_id);
       if (!categoryExists) {
         req.body.category_id = null; // Set to null if category doesn't exist
+      }
+    }
+    
+    // Handle empty collaborator_id - if it's an empty string, set it to null
+    if (req.body.collaborator_id === '' || req.body.collaborator_id === undefined) {
+      req.body.collaborator_id = null;
+    } else {
+      // Verify the collaborator exists
+      const collaboratorExists = await Collaborator.findByPk(req.body.collaborator_id);
+      if (!collaboratorExists) {
+        req.body.collaborator_id = null; // Set to null if collaborator doesn't exist
       }
     }
 
@@ -357,7 +440,16 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     });
     
     const products = await Product.findAll({
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name'] }
+      ],
       order: [['title', 'ASC']]
+    });
+    
+    // Get collaborators for dropdown
+    const collaborators = await Collaborator.findAll({
+      where: { status: 1 },
+      order: [['name', 'ASC']]
     });
     
     // Re-render the form with error message
@@ -367,6 +459,7 @@ exports.updatePost = catchAsync(async (req, res, next) => {
       post: { ...req.body, id: req.params.id },
       categories,
       products,
+      collaborators,
       error: error.message || 'Có lỗi xảy ra khi cập nhật bài viết'
     });
   }
@@ -469,28 +562,6 @@ const upload = multer({
 });
 
 exports.uploadPostImage = upload.single('image');
-
-exports.resizePostImage = catchAsync(async (req, res, next) => {
-  if (!req.file) return next();
-
-  // Create directory if not exists
-  const dir = path.join(__dirname, '../public/img/posts');
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
-  // Generate unique filename
-  req.file.filename = `post-${req.user.id}-${Date.now()}.jpeg`;
-  
-  // Process and save image
-  await sharp(req.file.buffer)
-    .resize(1200, 800)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
-    .toFile(path.join(dir, req.file.filename));
-
-  next();
-});
 
 // Admin functionality to list all posts
 exports.getPostsAdmin = catchAsync(async (req, res, next) => {

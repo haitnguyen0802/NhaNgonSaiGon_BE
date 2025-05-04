@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng tin mới | Nhà Ngôn Sài Gòn</title>
+    <title>Đăng tin mới | Nhà Ngon Sài Gòn</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="<%= baseUrl %>/css/style.css">
     <style>
         .form-section {
             background-color: #fff;
@@ -69,6 +69,22 @@
             content: " *";
             color: red;
         }
+        
+        /* Alert transition styles */
+        .alert {
+            transition: opacity 0.3s linear;
+        }
+        .alert.fade {
+            opacity: 0;
+        }
+        .alert.fade.show {
+            opacity: 1;
+        }
+        
+        /* Add some spacing between alerts and content */
+        .alert + .alert {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -81,6 +97,13 @@
                     <div class="alert alert-<%= flashMessage.type %> alert-dismissible fade show" role="alert">
                         <%= flashMessage.message %>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+                
+                <% if (error && error.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show auto-close" role="alert">
+                        <%= error %>
+                        <button type="button" class="btn-close" aria-label="Close"></button>
                     </div>
                 <% } %>
                 
@@ -111,7 +134,8 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label for="title" class="form-label required">Tiêu đề</label>
-                                <input type="text" class="form-control" id="title" name="title" required>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="<%= typeof formData !== 'undefined' && formData.title ? formData.title : '' %>" required>
                                 <div class="invalid-feedback">Vui lòng nhập tiêu đề</div>
                             </div>
                         </div>
@@ -136,9 +160,76 @@
                                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="formatText('alignRight')"><i class="fas fa-align-right"></i></button>
                                     </div>
                                 </div>
-                                <textarea id="content" name="content" class="form-control" rows="10" required></textarea>
+                                <textarea id="content" name="content" class="form-control" rows="10" required><%= typeof formData !== 'undefined' && formData.content ? formData.content : '' %></textarea>
                                 <div class="invalid-feedback">Vui lòng nhập mô tả chi tiết</div>
                                 <div class="form-text">Sử dụng thanh công cụ phía trên để định dạng văn bản.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="category_id" class="form-label">Danh mục</label>
+                                <select class="form-select" id="category_id" name="category_id">
+                                    <option value="">-- Chọn danh mục --</option>
+                                    <% if (locals.categories && categories.length > 0) { %>
+                                        <% categories.forEach(category => { %>
+                                            <option value="<%= category.id %>" <%= (typeof formData !== 'undefined' && formData.category_id == category.id) ? 'selected' : '' %>>
+                                                <%= category.name %>
+                                            </option>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <option value="" disabled>Không có danh mục nào</option>
+                                    <% } %>
+                                </select>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted">Chọn danh mục phù hợp với nội dung bài viết</small>
+                                    <small>
+                                        <a href="/categories/new" target="_blank" class="text-primary">
+                                            <i class="fas fa-plus-circle"></i> Thêm danh mục mới
+                                        </a>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="product_id" class="form-label required">Sản phẩm liên quan</label>
+                                <select class="form-select" id="product_id" name="product_id" required>
+                                    <option value="">-- Chọn sản phẩm --</option>
+                                    <% if (locals.products && products.length > 0) { %>
+                                        <% products.forEach(product => { %>
+                                            <option value="<%= product.id %>" 
+                                                    data-category="<%= product.category_id %>" 
+                                                    <%= (typeof formData !== 'undefined' && formData.product_id == product.id) ? 'selected' : '' %>>
+                                                <%= product.title %> (<%= product.location %>)
+                                            </option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                                <div class="invalid-feedback">Vui lòng chọn sản phẩm liên quan</div>
+                                <small class="text-muted mt-2">Hiển thị sản phẩm theo danh mục đã chọn ở trên</small>
+                                
+                                <!-- Debug info -->
+                                <% if (process.env.NODE_ENV === 'development') { %>
+                                <div class="mt-3 p-2 bg-light rounded">
+                                    <small class="text-muted">Debug: Thông tin sản phẩm và danh mục (chỉ hiển thị trong môi trường phát triển)</small>
+                                    <div class="mt-1">
+                                        <% if (locals.products && products.length > 0) { %>
+                                            <ul>
+                                                <% products.slice(0, 5).forEach(product => { %>
+                                                    <li>ID: <%= product.id %>, Title: <%= product.title %>, Category ID: <%= product.category_id %></li>
+                                                <% }); %>
+                                                <% if (products.length > 5) { %>
+                                                    <li>... và <%= products.length - 5 %> sản phẩm khác</li>
+                                                <% } %>
+                                            </ul>
+                                        <% } else { %>
+                                            <p>Không có sản phẩm nào.</p>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <% } %>
                             </div>
                         </div>
                     </div>
@@ -150,12 +241,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="contact_name" class="form-label required">Tên liên hệ</label>
-                                <input type="text" class="form-control" id="contact_name" name="contact_name" required>
+                                <input type="text" class="form-control" id="contact_name" name="contact_name" 
+                                       value="<%= typeof formData !== 'undefined' && formData.contact_name ? formData.contact_name : '' %>" required>
                                 <div class="invalid-feedback">Vui lòng nhập tên liên hệ</div>
                             </div>
                             <div class="col-md-6">
                                 <label for="contact_phone" class="form-label required">Điện thoại</label>
-                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" required pattern="[0-9]{10,11}">
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" 
+                                       value="<%= typeof formData !== 'undefined' && formData.contact_phone ? formData.contact_phone : '' %>" required pattern="[0-9]{10,11}">
                                 <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
                             </div>
                         </div>
@@ -167,7 +260,7 @@
                                     <option value="">-- Chọn cộng tác viên --</option>
                                     <% if (locals.collaborators && collaborators.length > 0) { %>
                                         <% collaborators.forEach(collaborator => { %>
-                                            <option value="<%= collaborator.id %>"><%= collaborator.name %></option>
+                                            <option value="<%= collaborator.id %>" <%= (typeof formData !== 'undefined' && formData.collaborator_id == collaborator.id) ? 'selected' : '' %>><%= collaborator.name %></option>
                                         <% }); %>
                                     <% } %>
                                 </select>
@@ -184,35 +277,35 @@
                                 <label for="district" class="form-label required">Quận/Huyện</label>
                                 <select class="form-select" id="district" name="district" required>
                                     <option value="">-- Chọn Quận/Huyện --</option>
-                                    <option value="Quận 1">Quận 1</option>
-                                    <option value="Quận 2">Quận 2</option>
-                                    <option value="Quận 3">Quận 3</option>
-                                    <option value="Quận 4">Quận 4</option>
-                                    <option value="Quận 5">Quận 5</option>
-                                    <option value="Quận 6">Quận 6</option>
-                                    <option value="Quận 7">Quận 7</option>
-                                    <option value="Quận 8">Quận 8</option>
-                                    <option value="Quận 9">Quận 9</option>
-                                    <option value="Quận 10">Quận 10</option>
-                                    <option value="Quận 11">Quận 11</option>
-                                    <option value="Quận 12">Quận 12</option>
-                                    <option value="Quận Bình Thạnh">Quận Bình Thạnh</option>
-                                    <option value="Quận Tân Bình">Quận Tân Bình</option>
-                                    <option value="Quận Tân Phú">Quận Tân Phú</option>
-                                    <option value="Quận Phú Nhuận">Quận Phú Nhuận</option>
-                                    <option value="Quận Gò Vấp">Quận Gò Vấp</option>
-                                    <option value="Quận Thủ Đức">TP Thủ Đức</option>
-                                    <option value="Huyện Bình Chánh">Huyện Bình Chánh</option>
-                                    <option value="Huyện Củ Chi">Huyện Củ Chi</option>
-                                    <option value="Huyện Hóc Môn">Huyện Hóc Môn</option>
-                                    <option value="Huyện Nhà Bè">Huyện Nhà Bè</option>
-                                    <option value="Huyện Cần Giờ">Huyện Cần Giờ</option>
+                                    <option value="Quận 1" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 1') ? 'selected' : '' %>>Quận 1</option>
+                                    <option value="Quận 2" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 2') ? 'selected' : '' %>>Quận 2</option>
+                                    <option value="Quận 3" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 3') ? 'selected' : '' %>>Quận 3</option>
+                                    <option value="Quận 4" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 4') ? 'selected' : '' %>>Quận 4</option>
+                                    <option value="Quận 5" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 5') ? 'selected' : '' %>>Quận 5</option>
+                                    <option value="Quận 6" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 6') ? 'selected' : '' %>>Quận 6</option>
+                                    <option value="Quận 7" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 7') ? 'selected' : '' %>>Quận 7</option>
+                                    <option value="Quận 8" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 8') ? 'selected' : '' %>>Quận 8</option>
+                                    <option value="Quận 9" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 9') ? 'selected' : '' %>>Quận 9</option>
+                                    <option value="Quận 10" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 10') ? 'selected' : '' %>>Quận 10</option>
+                                    <option value="Quận 11" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 11') ? 'selected' : '' %>>Quận 11</option>
+                                    <option value="Quận 12" <%= (typeof formData !== 'undefined' && formData.district === 'Quận 12') ? 'selected' : '' %>>Quận 12</option>
+                                    <option value="Quận Bình Thạnh" <%= (typeof formData !== 'undefined' && formData.district === 'Quận Bình Thạnh') ? 'selected' : '' %>>Quận Bình Thạnh</option>
+                                    <option value="Quận Tân Bình" <%= (typeof formData !== 'undefined' && formData.district === 'Quận Tân Bình') ? 'selected' : '' %>>Quận Tân Bình</option>
+                                    <option value="Quận Tân Phú" <%= (typeof formData !== 'undefined' && formData.district === 'Quận Tân Phú') ? 'selected' : '' %>>Quận Tân Phú</option>
+                                    <option value="Quận Phú Nhuận" <%= (typeof formData !== 'undefined' && formData.district === 'Quận Phú Nhuận') ? 'selected' : '' %>>Quận Phú Nhuận</option>
+                                    <option value="Quận Gò Vấp" <%= (typeof formData !== 'undefined' && formData.district === 'Quận Gò Vấp') ? 'selected' : '' %>>Quận Gò Vấp</option>
+                                    <option value="Quận Thủ Đức" <%= (typeof formData !== 'undefined' && formData.district === 'Quận Thủ Đức') ? 'selected' : '' %>>TP Thủ Đức</option>
+                                    <option value="Huyện Bình Chánh" <%= (typeof formData !== 'undefined' && formData.district === 'Huyện Bình Chánh') ? 'selected' : '' %>>Huyện Bình Chánh</option>
+                                    <option value="Huyện Củ Chi" <%= (typeof formData !== 'undefined' && formData.district === 'Huyện Củ Chi') ? 'selected' : '' %>>Huyện Củ Chi</option>
+                                    <option value="Huyện Hóc Môn" <%= (typeof formData !== 'undefined' && formData.district === 'Huyện Hóc Môn') ? 'selected' : '' %>>Huyện Hóc Môn</option>
+                                    <option value="Huyện Nhà Bè" <%= (typeof formData !== 'undefined' && formData.district === 'Huyện Nhà Bè') ? 'selected' : '' %>>Huyện Nhà Bè</option>
+                                    <option value="Huyện Cần Giờ" <%= (typeof formData !== 'undefined' && formData.district === 'Huyện Cần Giờ') ? 'selected' : '' %>>Huyện Cần Giờ</option>
                                 </select>
                                 <div class="invalid-feedback">Vui lòng chọn quận/huyện</div>
                             </div>
                             <div class="col-md-6">
                                 <label for="ward" class="form-label required">Phường/Xã</label>
-                                <input type="text" class="form-control" id="ward" name="ward" required>
+                                <input type="text" class="form-control" id="ward" name="ward" value="<%= typeof formData !== 'undefined' && formData.ward ? formData.ward : '' %>" required>
                                 <div class="invalid-feedback">Vui lòng nhập phường/xã</div>
                             </div>
                         </div>
@@ -220,7 +313,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label for="address" class="form-label required">Địa chỉ chi tiết</label>
-                                <input type="text" class="form-control" id="address" name="address" required>
+                                <input type="text" class="form-control" id="address" name="address" value="<%= typeof formData !== 'undefined' && formData.address ? formData.address : '' %>" required>
                                 <div class="invalid-feedback">Vui lòng nhập địa chỉ chi tiết</div>
                             </div>
                         </div>
@@ -228,20 +321,20 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="street_width" class="form-label">Đường trước nhà (m)</label>
-                                <input type="number" step="0.1" min="0" class="form-control" id="street_width" name="street_width">
+                                <input type="number" step="0.1" min="0" class="form-control" id="street_width" name="street_width" value="<%= typeof formData !== 'undefined' && formData.street_width ? formData.street_width : '' %>">
                             </div>
                             <div class="col-md-6">
                                 <label for="direction" class="form-label">Hướng nhà</label>
                                 <select class="form-select" id="direction" name="direction">
                                     <option value="">-- Chọn hướng --</option>
-                                    <option value="Đông">Đông</option>
-                                    <option value="Tây">Tây</option>
-                                    <option value="Nam">Nam</option>
-                                    <option value="Bắc">Bắc</option>
-                                    <option value="Đông-Bắc">Đông-Bắc</option>
-                                    <option value="Đông-Nam">Đông-Nam</option>
-                                    <option value="Tây-Bắc">Tây-Bắc</option>
-                                    <option value="Tây-Nam">Tây-Nam</option>
+                                    <option value="Đông" <%= (typeof formData !== 'undefined' && formData.direction === 'Đông') ? 'selected' : '' %>>Đông</option>
+                                    <option value="Tây" <%= (typeof formData !== 'undefined' && formData.direction === 'Tây') ? 'selected' : '' %>>Tây</option>
+                                    <option value="Nam" <%= (typeof formData !== 'undefined' && formData.direction === 'Nam') ? 'selected' : '' %>>Nam</option>
+                                    <option value="Bắc" <%= (typeof formData !== 'undefined' && formData.direction === 'Bắc') ? 'selected' : '' %>>Bắc</option>
+                                    <option value="Đông-Bắc" <%= (typeof formData !== 'undefined' && formData.direction === 'Đông-Bắc') ? 'selected' : '' %>>Đông-Bắc</option>
+                                    <option value="Đông-Nam" <%= (typeof formData !== 'undefined' && formData.direction === 'Đông-Nam') ? 'selected' : '' %>>Đông-Nam</option>
+                                    <option value="Tây-Bắc" <%= (typeof formData !== 'undefined' && formData.direction === 'Tây-Bắc') ? 'selected' : '' %>>Tây-Bắc</option>
+                                    <option value="Tây-Nam" <%= (typeof formData !== 'undefined' && formData.direction === 'Tây-Nam') ? 'selected' : '' %>>Tây-Nam</option>
                                 </select>
                             </div>
                         </div>
@@ -255,7 +348,7 @@
                             <div class="col-md-6">
                                 <label for="price" class="form-label required">Giá (VNĐ)</label>
                                 <div class="input-group">
-                                    <input type="number" min="0" step="1000000" class="form-control" id="price" name="price" required>
+                                    <input type="number" min="0" step="1000000" class="form-control" id="price" name="price" value="<%= typeof formData !== 'undefined' && formData.price ? formData.price : '' %>" required>
                                     <span class="input-group-text">₫</span>
                                 </div>
                                 <div class="invalid-feedback">Vui lòng nhập giá</div>
@@ -263,7 +356,7 @@
                             <div class="col-md-6">
                                 <div class="mt-4">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="is_discounted" name="is_discounted" value="true">
+                                        <input class="form-check-input" type="checkbox" id="is_discounted" name="is_discounted" value="true" <%= (typeof formData !== 'undefined' && formData.is_discounted === 'true') ? 'checked' : '' %>>
                                         <label class="form-check-label" for="is_discounted">
                                             Giảm giá
                                         </label>
@@ -275,36 +368,36 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label for="area" class="form-label required">Diện tích (m²)</label>
-                                <input type="number" min="0" step="0.1" class="form-control" id="area" name="area" required>
+                                <input type="number" min="0" step="0.1" class="form-control" id="area" name="area" value="<%= typeof formData !== 'undefined' && formData.area ? formData.area : '' %>" required>
                                 <div class="invalid-feedback">Vui lòng nhập diện tích</div>
                             </div>
                             <div class="col-md-4">
                                 <label for="width" class="form-label">Chiều ngang (m)</label>
-                                <input type="number" min="0" step="0.1" class="form-control" id="width" name="width">
+                                <input type="number" min="0" step="0.1" class="form-control" id="width" name="width" value="<%= typeof formData !== 'undefined' && formData.width ? formData.width : '' %>">
                             </div>
                             <div class="col-md-4">
                                 <label for="length" class="form-label">Chiều dài (m)</label>
-                                <input type="number" min="0" step="0.1" class="form-control" id="length" name="length">
+                                <input type="number" min="0" step="0.1" class="form-control" id="length" name="length" value="<%= typeof formData !== 'undefined' && formData.length ? formData.length : '' %>">
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label for="floors" class="form-label">Số tầng</label>
-                                <input type="number" min="0" step="1" class="form-control" id="floors" name="floors">
+                                <input type="number" min="0" step="1" class="form-control" id="floors" name="floors" value="<%= typeof formData !== 'undefined' && formData.floors ? formData.floors : '' %>">
                             </div>
                             <div class="col-md-4">
                                 <label for="bedrooms" class="form-label">Số phòng ngủ</label>
-                                <input type="number" min="0" step="1" class="form-control" id="bedrooms" name="bedrooms">
+                                <input type="number" min="0" step="1" class="form-control" id="bedrooms" name="bedrooms" value="<%= typeof formData !== 'undefined' && formData.bedrooms ? formData.bedrooms : '' %>">
                             </div>
                             <div class="col-md-4">
                                 <label for="legal_status" class="form-label">Pháp lý</label>
                                 <select class="form-select" id="legal_status" name="legal_status">
                                     <option value="">-- Chọn pháp lý --</option>
-                                    <option value="Sổ đỏ/Sổ hồng">Sổ đỏ/Sổ hồng</option>
-                                    <option value="Hợp đồng mua bán">Hợp đồng mua bán</option>
-                                    <option value="Đang chờ sổ">Đang chờ sổ</option>
-                                    <option value="Giấy tờ khác">Giấy tờ khác</option>
+                                    <option value="Sổ đỏ/Sổ hồng" <%= (typeof formData !== 'undefined' && formData.legal_status === 'Sổ đỏ/Sổ hồng') ? 'selected' : '' %>>Sổ đỏ/Sổ hồng</option>
+                                    <option value="Hợp đồng mua bán" <%= (typeof formData !== 'undefined' && formData.legal_status === 'Hợp đồng mua bán') ? 'selected' : '' %>>Hợp đồng mua bán</option>
+                                    <option value="Đang chờ sổ" <%= (typeof formData !== 'undefined' && formData.legal_status === 'Đang chờ sổ') ? 'selected' : '' %>>Đang chờ sổ</option>
+                                    <option value="Giấy tờ khác" <%= (typeof formData !== 'undefined' && formData.legal_status === 'Giấy tờ khác') ? 'selected' : '' %>>Giấy tờ khác</option>
                                 </select>
                             </div>
                         </div>
@@ -344,6 +437,46 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Custom JS -->
     <script>
+        // Debug: Log all product data
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('==== DEBUGGING PRODUCT DATA ====');
+            const productSelect = document.getElementById('product_id');
+            if (productSelect) {
+                const options = Array.from(productSelect.options).slice(1); // Skip first option
+                console.log('Total product options:', options.length);
+                options.forEach((option, index) => {
+                    console.log(`Product ${index + 1}:`, {
+                        id: option.value,
+                        category_id: option.getAttribute('data-category'),
+                        text: option.text
+                    });
+                });
+            }
+            
+            const categorySelect = document.getElementById('category_id');
+            if (categorySelect) {
+                console.log('Categories available:', Array.from(categorySelect.options).map(opt => ({
+                    id: opt.value,
+                    text: opt.text
+                })));
+            }
+            console.log('================================');
+        });
+
+        // Ensure category ID comparison is working correctly
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Testing category ID comparison...');
+            // Test string vs number comparison with == and ===
+            const tests = [
+                { a: "1", b: 1, eqEq: "1" == 1, eqEqEq: "1" === 1 },
+                { a: "", b: 0, eqEq: "" == 0, eqEqEq: "" === 0 },
+                { a: "0", b: 0, eqEq: "0" == 0, eqEqEq: "0" === 0 },
+                { a: null, b: 0, eqEq: null == 0, eqEqEq: null === 0 },
+                { a: "null", b: null, eqEq: "null" == null, eqEqEq: "null" === null }
+            ];
+            console.table(tests);
+        });
+
         // Basic text formatting function
         function formatText(command) {
             const textarea = document.getElementById('content');
@@ -457,6 +590,108 @@
                     }, false);
                 });
         })();
+
+        // Completely replace Bootstrap's alert dismissal to avoid the error
+        document.addEventListener('DOMContentLoaded', function() {
+            // Disable Bootstrap's data-bs-dismiss functionality for custom handling
+            const closeButtons = document.querySelectorAll('.alert .btn-close:not([data-bs-dismiss])');
+            closeButtons.forEach(button => {
+                // Add our custom click handler
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const alert = this.closest('.alert');
+                    if (alert) {
+                        // Manual fade out and removal
+                        alert.classList.remove('show');
+                        setTimeout(() => {
+                            if (alert.parentNode) {
+                                alert.parentNode.removeChild(alert);
+                            }
+                        }, 150);
+                    }
+                });
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            const autoCloseAlerts = document.querySelectorAll('.alert.auto-close');
+            autoCloseAlerts.forEach(alert => {
+                setTimeout(() => {
+                    if (alert && document.body.contains(alert)) {
+                        // Manual fade out and removal
+                        alert.classList.remove('show');
+                        setTimeout(() => {
+                            if (alert.parentNode) {
+                                alert.parentNode.removeChild(alert);
+                            }
+                        }, 150);
+                    }
+                }, 5000);
+            });
+        });
+
+        // Filter products by selected category using AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const categorySelect = document.getElementById('category_id');
+            const productSelect = document.getElementById('product_id');
+            
+            if (categorySelect && productSelect) {
+                // Function to update products dropdown based on selected category
+                function updateProductsByCategory(categoryId) {
+                    // Show loading indicator
+                    productSelect.innerHTML = '<option value="">Đang tải sản phẩm...</option>';
+                    
+                    // Convert to number if possible
+                    const numericCategoryId = Number(categoryId) || '';
+                    
+                    // Make AJAX request to get products for this category
+                    $.ajax({
+                        url: '/products/api/by-category/' + numericCategoryId,
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            // Clear product dropdown
+                            productSelect.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+                            
+                            // Add products to dropdown
+                            if (response && response.length > 0) {
+                                response.forEach(product => {
+                                    const option = document.createElement('option');
+                                    option.value = product.id;
+                                    option.textContent = `${product.title} (${product.location || ''})`;
+                                    productSelect.appendChild(option);
+                                });
+                                console.log(`Loaded ${response.length} products for category ID ${numericCategoryId}`);
+                            } else {
+                                // If no products, add a disabled option
+                                const noProductOption = document.createElement('option');
+                                noProductOption.value = "";
+                                noProductOption.text = "Không có sản phẩm trong danh mục này";
+                                noProductOption.disabled = true;
+                                productSelect.appendChild(noProductOption);
+                            }
+                        },
+                        error: function(error) {
+                            console.error('Error fetching products:', error);
+                            productSelect.innerHTML = '<option value="">Lỗi khi tải sản phẩm</option>';
+                        }
+                    });
+                }
+                
+                // Event listener for category change
+                categorySelect.addEventListener('change', function() {
+                    const selectedCategoryId = this.value;
+                    console.log('Category changed to:', selectedCategoryId);
+                    
+                    if (selectedCategoryId) {
+                        updateProductsByCategory(selectedCategoryId);
+                    } else {
+                        // If no category selected, call the API without a category ID
+                        // This will return all active products
+                        updateProductsByCategory('');
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html> 

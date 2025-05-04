@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const AppError = require('../utils/errorHandler');
 const ProductImage = require('../models/ProductImage');
+const imageService = require('../utils/imageService');
 
 // Lấy tất cả sản phẩm với các bộ lọc
 exports.getAllProducts = async (req, res, next) => {
@@ -116,7 +117,8 @@ exports.createProduct = async (req, res, next) => {
       status, 
       collaborator_id, 
       category,
-      description 
+      description,
+      product_mts
     } = req.body;
     
     // Prepare product data
@@ -142,27 +144,51 @@ exports.createProduct = async (req, res, next) => {
     
     // Add category if provided
     if (category) {
-      productData.category = category;
+      productData.category_id = parseInt(category);
     }
     
-    // Process uploaded images
-    if (req.files && req.files.length > 0) {
-      // Store only the filename for representative image, not the full path
-      productData.representative_image = req.files[0].filename;
+    // Xử lý mã sản phẩm (product_mts)
+    if (product_mts) {
+      // Sử dụng mã đã được cung cấp
+      productData.product_mts = parseInt(product_mts);
+    } else {
+      // Tự động tạo mã mới
+      try {
+        // Tìm mã lớn nhất trong cơ sở dữ liệu
+        const maxMtsProduct = await Product.findOne({
+          order: [['product_mts', 'DESC']]
+        });
+        
+        // Nếu có sản phẩm, lấy mã lớn nhất và cộng 1, nếu không bắt đầu từ 1
+        const nextMts = maxMtsProduct ? parseInt(maxMtsProduct.product_mts) + 1 : 1;
+        productData.product_mts = nextMts;
+      } catch (error) {
+        console.error('Error generating product_mts:', error);
+        productData.product_mts = 1; // Mặc định là 1 nếu có lỗi
+      }
+    }
+    
+    // Process Cloudinary images
+    if (req.cloudinaryImages && req.cloudinaryImages.length > 0) {
+      // Use first image as representative
+      productData.representative_image = req.cloudinaryImages[0].url;
+      // Lưu thêm public_id để có thể xóa ảnh sau này nếu cần
+      productData.image_public_id = req.cloudinaryImages[0].public_id;
     }
     
     // Create product in database using Sequelize
     const product = await Product.create(productData);
     
-    // Save additional images if any
-    if (req.files && req.files.length > 0) {
-      const imagePromises = req.files.map((file, index) => {
+    // Save additional Cloudinary images if any
+    if (req.cloudinaryImages && req.cloudinaryImages.length > 1) {
+      const imagePromises = req.cloudinaryImages.map((image, index) => {
         // Skip the first image as it's already set as representative_image
         if (index === 0) return null;
         
         return ProductImage.create({
           product_id: product.id,
-          image_url: file.filename // Store only the filename
+          image_url: image.url,
+          public_id: image.public_id
         });
       }).filter(promise => promise !== null); // Filter out nulls
       
@@ -221,7 +247,8 @@ exports.updateProduct = async (req, res, next) => {
       status, 
       collaborator_id, 
       category,
-      description 
+      description,
+      product_mts
     } = req.body;
     
     // Prepare product data for update
@@ -231,6 +258,11 @@ exports.updateProduct = async (req, res, next) => {
     if (price) productData.price = parseFloat(price);
     if (status) productData.status = status;
     if (description !== undefined) productData.description = description || null;
+    
+    // Update product_mts if provided
+    if (product_mts) {
+      productData.product_mts = parseInt(product_mts);
+    }
     
     // Add discount price if provided
     if (discount_price && parseFloat(discount_price) > 0) {
@@ -252,33 +284,36 @@ exports.updateProduct = async (req, res, next) => {
     
     // Add category if provided
     if (category) {
-      productData.category = category;
+      productData.category_id = parseInt(category);
     } else if (category === '') {
-      productData.category = null;
+      console.log('Giữ nguyên category_id cũ vì ràng buộc không cho phép NULL');
     }
     
-    // Process uploaded images
-    if (req.files && req.files.length > 0) {
-      // Store only the filename for representative image
-      productData.representative_image = req.files[0].filename;
+    // Process Cloudinary images
+    if (req.cloudinaryImages && req.cloudinaryImages.length > 0) {
+      // Use first image as representative
+      productData.representative_image = req.cloudinaryImages[0].url;
+      // Lưu thêm public_id để có thể xóa ảnh sau này nếu cần
+      productData.image_public_id = req.cloudinaryImages[0].public_id;
       
-      // Handle additional images if any
-      if (req.files.length > 1) {
-        // Delete existing product images except representative image
+      // Xử lý các ảnh bổ sung nếu có
+      if (req.cloudinaryImages.length > 1) {
+        // Xóa các ảnh sản phẩm hiện có
         await ProductImage.destroy({
           where: { product_id: product.id }
         });
         
-        // Add new images
-        const imagePromises = req.files.map((file, index) => {
-          // Skip the first image as it's already set as representative_image
+        // Thêm ảnh mới
+        const imagePromises = req.cloudinaryImages.map((image, index) => {
+          // Bỏ qua ảnh đầu tiên vì đã đặt là representative_image
           if (index === 0) return null;
           
           return ProductImage.create({
             product_id: product.id,
-            image_url: file.filename // Store only the filename
+            image_url: image.url,
+            public_id: image.public_id
           });
-        }).filter(promise => promise !== null);
+        }).filter(promise => promise !== null); // Lọc bỏ các giá trị null
         
         if (imagePromises.length > 0) {
           await Promise.all(imagePromises);
