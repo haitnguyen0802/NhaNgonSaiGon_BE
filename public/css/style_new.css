@@ -1,0 +1,164 @@
+/* Main CSS */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+}
+
+/* Sidebar */
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+#sidebar.active {
+    margin-left: -250px;
+}
+
+#sidebar .sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+}
+
+#sidebar ul li a {
+    padding: 12px 20px;
+    display: block;
+    border-radius: 5px;
+    margin: 5px 15px;
+    transition: all 0.3s;
+}
+
+#sidebar ul li a:hover,
+#sidebar ul li.active > a {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Content */
+#content {
+    width: 100%;
+    padding: 0;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: bold;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+.btn-success {
+    background-color: #1cc88a;
+    border-color: #1cc88a;
+}
+
+.btn-info {
+    background-color: #36b9cc;
+    border-color: #36b9cc;
+}
+
+.btn-warning {
+    background-color: #f6c23e;
+    border-color: #f6c23e;
+}
+
+.btn-danger {
+    background-color: #e74a3b;
+    border-color: #e74a3b;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fc;
+}
+
+/* Dashboard cards */
+.stat-card {
+    border-left: 4px solid;
+    border-radius: 4px;
+}
+
+.stat-card.primary {
+    border-left-color: #4e73df;
+}
+
+.stat-card.success {
+    border-left-color: #1cc88a;
+}
+
+.stat-card.info {
+    border-left-color: #36b9cc;
+}
+
+.stat-card.warning {
+    border-left-color: #f6c23e;
+}
+
+.stat-card .stat-icon {
+    opacity: 0.3;
+    font-size: 2rem;
+}
+
+/* Avatar */
+.avatar {
+    object-fit: cover;
+}
+
+/* Product image */
+.product-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+/* File upload */
+.upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-area:hover {
+    border-color: #4e73df;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+    #sidebarCollapse span {
+        display: none;
+    }
+} 
